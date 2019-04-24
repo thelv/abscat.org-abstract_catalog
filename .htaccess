@@ -1,0 +1,5 @@
+RewriteEngine On
+#RewriteRule ^(ru\/[^\.]*)$ /ru/index.php [L]
+RewriteRule ^([^\.]*)$ index_compile.php [L]
+RewriteRule ^js/main\.js.*$ js/main.php [L]
+#RewriteRule ^js/classes/.*\.js.*$ index_compile.php [L]
