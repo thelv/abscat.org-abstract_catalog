@@ -84,6 +84,19 @@ body, input, textarea, table{font-family:tahoma;font-size:14px;font-weight:norma
 		
 .connection{display:inline-block;line-height:22px;vertical-align:top;margin-right:4px;color:#999;cursor:pointer}
 	.connection_text:hover{text-decoration:underline}
+	.connection_text_no_childs:hover{text-decoration:none}
+	.connection_text_no_childs{cursor:auto}
+/*.connection_expand{  
+	display:block;
+	position:absolute;
+	margin-left:-20px;
+	width:20px;
+	height:22px;
+	padding-left:29px;
+	background: url(/img/connection_expand.png) no-repeat 4px 7px;
+	
+	}
+	.tree .childs{padding-left:24px !important}*/
 	
 /* ! object */
 
@@ -96,9 +109,9 @@ body, input, textarea, table{font-family:tahoma;font-size:14px;font-weight:norma
 		.body_loading div{position:absolute;width:200px;height:20px;background:rgba(255, 255, 255, 0.87)}
 	#initial_loading{height:37px;margin-top:8px}					
 		#initial_loading div{position:absolute;width:200px;height:20px;background:rgba(255, 255, 255, 0.87)}
-	.body_menu{margin-top:6px;}
-		.body_menu a{display:inline-block;margin-right:10px;color:#22f;cursor:pointer}
-			.body_menu a:hover{text-decoration:underline}
+	.body_menu{margin-top:6px;/*margin-bottom:-1px*/}
+		.body_menu a{display:inline-block;margin-right:10px;color:#22f;cursor:pointer;/*border-bottom:1px dotted*/}
+			.body_menu a:hover{text-decoration:underline;-border-bottom-style:solid}
 	
 	/*.body_menu{display: table;margin-top: 10px;padding-bottom:7px;border-bottom: 1px solid #ddd;background: #f5f5f5;padding-top: 6px;margin-bottom:10px}
 		.body_menu a{display: inline-block;margin-right: 10px;color: #22f;cursor: pointer;border-right: 1px solid #ddd;padding-right: 10px;}
@@ -320,8 +333,8 @@ body.select #select{display:block;}
 #toast{position:fixed;left:50%;top:50%;display:none}	
 	#toast > div{padding:5px 24px;color:#eee;border-radius:5px;background:rgba(120,120,120,0.84);left:-50%;top:-35px;position:relative}
 			
-#window_container{display-:none;position:fixed;left:0;top:0;background:rgba(0,0,0,0.5);width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2}
-	.window{/*margin: 100px auto;*/background:#fff;border:1px solid #ccc;width: 1152px;margin-bottom:75px}
+#window_container{display-:none;position:fixed;left:0;top:0;background:rgba(0,0,0,0.5);width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:4}
+	.window{/*margin: 100px auto;*/background:#fff;border:1px solid #ccc;width: 1152px;margin-bottom-:75px}
 		.window > ._head{font-size:15px;font-weight-:bold;padding:5px 0;border-bottom:1px solid #ddd;background:#eee;text-indent:24px;10px}
 		.window > ._body{padding:0px 10px;margin-top:6px;overflow:hidden}
 			.window ._form{padding-right:20px;display:inline-block;vertical-align:top}
@@ -380,7 +393,7 @@ body.select #select{display:block;}
 	#facebook_like{-width:64px;110px;padding-left:0px;background:url(/img/like_facebook.png?) no-repeat; width:56px}
 	#facebook_like:hover{background:url(/img/like_facebook.png?) 0 -20px no-repeat;}
 	#facebook_like:active{background:url(/img/like_facebook.png?) 0 -40px no-repeat;}
-	#tweeter_like, #tweeter_like iframe{width:63px !important;overflow:hidden}
+	#tweeter_like, #tweeter_like iframe{width:62px !important;overflow:hidden}
 	#google_plus_like, #google_plus_like > div, #google_plus_like iframe{width:/*65px*/34px !important;oveflow:hidden}
 	#google_plus_like{background:url(/img/like_google.png?) no-repeat; width:34px}
 	#google_plus_like:hover{background:url(/img/like_google.png?) 0 -20px no-repeat;}
@@ -411,6 +424,9 @@ body.comments_hided #comments_cont{height:auto;padding-right:10px;position:absol
 		#comments_show{display:none;color:#22f;cursor:pointer;}
 			#comments_show:hover{text-decoration:underline}
 		body.comments_hided #comments_cont #comments_show{display:inline-block}
+		
+		/*#comments_hide, #comments_show{border-bottom:1px dotted #22f;margin-bottom:0px;line-height:17px;margin:1px 0;}
+		#comments_hide:hover, #comments_show:hover{border-bottom-style:solid}*/
 
 .commentsComment + div{border-bottom:1px solid #d0d0d7;/*#dddde7;*/#d9d9e0;/*#d6d6d6;*/#ccc;#d0d0e3;/*#dddde9;#ccccd0;*/#e3e3ee;#ddf;#d0d0e3;f0;#d9d9f3;/*#d3d3ee;*/#ddf;#ccc;#cccccc;#cecece;#d0d0d0;d6d6d6;margin-left:48px;margin-right:8px;}
 

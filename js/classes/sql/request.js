@@ -1,6 +1,6 @@
 //var sqlRequest=(function()
 //{
-	alert(1);
+	//alert(1);
 	objectClone=function(o)
 	{
 		var c={};

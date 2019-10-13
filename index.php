@@ -410,18 +410,18 @@
 										<input type=radio checked=checked name=type_special_is>song<input type=radio name=type_special_is>genre<input type=radio name=type_special_is>other: <input style='width:121px' name=object_type type=text placeholder="person">
 									</div>-->
 									
-									<div class=_body>
+									<!--<div class=_body>
 										<input type=radio checked=checked name=type_special_is>song (music composition)<!--<input type=radio name=type_special_is>genre<!-- <input type=radio name=type_special_is>artist--><!--<input type=radio name=type_special_is>other: <input style='width:121px' name=object_type type=text placeholder="person"><!-- <input type=radio name=type_special_is>album-->
-									</div>
+									<!--</div>-->
 									<!--<div class=_body style='margin-top:7px'>
 										<input type=radio name=type_special_is>other: <input name=object_type type=text placeholder="person"> 
 									</div>-->
 									
-									 <div class=_body style='margin-top:8px'>
+									 <!--<div class=_body style='margin-top:8px'>
 										<input type=radio name=type_special_is>music genre
-									</div>
+									</div>-->
 									<div class=_body>
-										 <input type=radio name=type_special_is>other: <input name=object_type type=text placeholder="person">
+										<!-- <input type=radio name=type_special_is>other:--> <input name=object_type type=text placeholder="person">
 									</div>
 									<!-- <div class=_head>
 										Is it a special type:
@@ -491,11 +491,11 @@
 									<div class=_head>
 										$@{Type}:
 									</div>
-									<div class=_body>
+									<!-- <div class=_body>
 										<input type=radio checked=checked name=type_special_is>song<input type=radio name=type_special_is>music genre<!-- <input type=radio name=type_special_is>artist<!-- other: <input style='width:121px' name=object_type type=text placeholder="person"> --><!-- <input type=radio name=type_special_is>album-->
-									</div>
-									<div class=_body style='margin-top:7px'>
-										<input type=radio name=type_special_is>other: <input style='width:121px' name=object_type type=text placeholder="person"> 
+									<!--</div>-->
+									<div class=_body style-='margin-top:7px'>
+										<!-- <input type=radio name=type_special_is>other: --><input style='width:121px' name=object_type type=text placeholder="person"> 
 									</div>
 									<!-- <div class=_body style='margin-top:8px'>
 										<input type=radio name=type_special_is>music genre
@@ -533,7 +533,7 @@
 									<!-- <div class="_head">
 										Subgenre connection:
 									</div> -->
-									<div class=_body style='margin-top:10px'>
+								<!--	<div class=_body style='margin-top:10px'>
 										<input type=radio name=connection_special>Subgenre
 									</div>
 								</div>
@@ -545,7 +545,7 @@
 								<div class="_element">
 									<div class=_body style='margin-top:10px'>
 										<input type=radio name=connection_special>Other connection type
-									</div>
+									</div>-->
 								
 
 									<div class="_head">
@@ -626,7 +626,7 @@
 									<div class=_body>
 										<input name=object_type type=text placeholder="person">									
 									</div>
-									<div class=_head>
+									<!--<div class=_head>
 										Is it a special type:
 									</div>									
 									<div class=_body>
@@ -634,7 +634,7 @@
 										<div class=_help>
 											song - you will be able to play it
 										</div>
-									</div>
+									</div>-->
 								</div>
 								<div class=_element>
 									<div class=_head>

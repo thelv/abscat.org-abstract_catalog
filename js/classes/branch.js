@@ -3,7 +3,9 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 	var this_=this;
 	
 	this.parent=parent;
-	this.childs=[];				
+	this.childs=[];		
+	this.childsLoaded=false;
+	this.childsShowed=false;
 	
 	if(objectId)
 	{
@@ -19,7 +21,7 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 						<a class="object_select"><input type="checkbox"></a><span class="object_">'
 						+(object.type=='song' ? '<a class=object_play></a>' : '')
 						+'<a class=object_text onclick="return false;"></a>'+
-						'<a class=object_menu_icon>\</a></span>\
+						'<!-- <a class=object_menu_icon>\</a> --></span>\
 					</div>\
 				</div>\
 				<div class="childs"></div>\
@@ -52,7 +54,7 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 		'\
 			<div class="branch">\
 				<div>\
-					<span class="connection"><span class="connection_text"></span>:</span>'+
+					<span class="connection"><span class="connection_text" title="expand"></span>:</span>'+
 					'<div class=object>'+
 						'<a class="object_select"><input type="checkbox"></a><span class="object_">'
 						+(object.type=='song' ? '<a class=object_play></a>' : '')
@@ -68,13 +70,15 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 		this.nodeConnectionText
 		.
 			text(connectionText)
-		.
+		;
+		this.node.find('.object_menu_icon')
+		.	
 			click((user.id!=catId) ? false : function()
 			{
 				
 				menu.openOrClose($(this).parent(), 
 				[	
-					{
+					/*{
 						text: '$@{connect the connection with a new object}',
 						action: function()
 						{
@@ -85,7 +89,7 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 								this_.showNewChild(childConnectionId);							
 							});
 						}
-					},
+					},*/
 					{
 						text: '$@{edit the connection}',
 						action: function()
@@ -113,8 +117,12 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 					}
 				])
 			})
-		;					
+		;
+		this.node.find('.object_menu_icon').function
 	}
+	
+	
+	this.nodeChilds=this.node.find('> .childs')
 	
 	this.nodeObject=this.node.find('.object');
 	this.nodeObjectText=this.nodeObject.find('.object_text')
@@ -204,55 +212,80 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 			player.open(object.text);
 		})
 	;
-		
 
-//	if(! objectId) return;
-	
-	var childConnections=[];
-	for(var i in data.connections)
+	this.childsShow=function(objectId, parentObjectId)
 	{
-		var childConnection=data.connections[i];
-		if(childConnection.fromObject===objectId || (connectionId && childConnection.fromConnection===connectionId))
-		{				
-			childConnections.push({connection: childConnection, connectionId: i, direction: true});
-		}
-		else if(childConnection.to==objectId)
+		if(! this.childsLoaded)
 		{
-			childConnections.push({connection: childConnection, connectionId: i, direction: false});
-		}						
-	}
-	childConnections=childConnections.sort(function(a, b)
-	{						
-		var aText=(a.direction ? a.connection.text : a.connection.oppositeText).toLowerCase();
-		var bText=(b.direction ? b.connection.text : b.connection.oppositeText).toLowerCase();
-		if(aText==bText)
-		{
-			var aObjectText=(a.direction ? data.objects[a.connection.to] : data.objects[a.connection.fromObject]).text.toLowerCase();
-			var bObjectText=(b.direction ? data.objects[b.connection.to] : data.objects[b.connection.fromObject]).text.toLowerCase();			
-			return (aObjectText>bObjectText) ? 1 : -1;;
-		}
-		return (aText>bText) ? 1 : -1;;
-	});
-	
-	for(var i in childConnections)
-	{
-		var childConnection=childConnections[i];
-		if(childConnection.direction)
-		{				
-			var child=new Branch(data, catId, false, +childConnection.connectionId, true, this);
+			var childConnections=[];
+			for(var i in data.connections)
+			{
+				var childConnection=data.connections[i];
+				if(childConnection.fromObject===objectId && childConnection.to!=parentObjectId/* || (connectionId && childConnection.fromConnection===connectionId)*/)
+				{				
+					childConnections.push({connection: childConnection, connectionId: i, direction: true});
+				}
+				else if(childConnection.to==objectId && childConnection.fromObject!=parentObjectId)
+				{
+					childConnections.push({connection: childConnection, connectionId: i, direction: false});
+				}						
+			}
+			childConnections=childConnections.sort(function(a, b)
+			{						
+				var aText=(a.direction ? a.connection.text : a.connection.oppositeText).toLowerCase();
+				var bText=(b.direction ? b.connection.text : b.connection.oppositeText).toLowerCase();
+				if(aText==bText)
+				{
+					var aObjectText=(a.direction ? data.objects[a.connection.to] : data.objects[a.connection.fromObject]).text.toLowerCase();
+					var bObjectText=(b.direction ? data.objects[b.connection.to] : data.objects[b.connection.fromObject]).text.toLowerCase();			
+					return (aObjectText>bObjectText) ? 1 : -1;;
+				}
+				return (aText>bText) ? 1 : -1;;
+			});
+
+			for(var i in childConnections)
+			{
+				var childConnection=childConnections[i];
+				if(childConnection.direction)
+				{				
+					var child=new Branch(data, catId, false, +childConnection.connectionId, true, this);
+				}
+				else
+				{
+					var child=new Branch(data, catId, false, +childConnection.connectionId, false, this);
+				}					
+				this.childs.push(child);
+				this.nodeChilds.append(child.node);
+			}
+			
+			if(childConnections.length==0 && parentObjectId) 
+			{
+				toast.show('no more connections except parent');
+				this.nodeConnectionText.addClass('connection_text_no_childs');
+				this.nodeConnectionText.attr('title', '');//no more connection');
+			}
+			
+			this.childsLoaded=this.childsShowed=true;
 		}
 		else
 		{
-			var child=new Branch(data, catId, false, +childConnection.connectionId, false, this);
-		}					
-		this.childs.push(child);
-		this.node.find('> .childs').append(child.node);
+			if(this.childsShowed) this.nodeChilds.hide(); else this.nodeChilds.show();
+			this.childsShowed=! this.childsShowed;
+		}
+	}
+	
+	if(objectId) this.childsShow(objectId); else
+	{
+		this.nodeConnectionText.click(function()
+		{
+			this_.childsShow(this_.objectId, parent.objectId);
+		});
 	}
 	
 	this.showNewChild=function(connectionId)
 	{
 		var child=new Branch(data, catId, false, connectionId, true, this);
 		this.childs.push(child);
-		this.node.find('> .childs').append(child.node);
+		this.nodeChilds.append(child.node);
 	}
 }

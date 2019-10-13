@@ -45,8 +45,8 @@ console.log('start');
 								Object_.actions.create({type: type.type, color: dataGetTypeColor(data, type.type)}, catId, data, function(objectId)
 								{									
 									//pages.catObj.go(catId, objectId);
-									filter();
-									toast.show('object created');
+									filter(true);
+									//toast.show('object created');
 								});													
 							}
 						}
@@ -150,7 +150,7 @@ console.log('start');
 												Object_.actions.edit(object, catId, data, function()
 												{											
 													objectNode.find('.object_text').text(object.text).css('color', object.color);
-													toast.show('object edited');
+													//toast.show('object edited');
 												}); 
 											}
 										},
@@ -163,7 +163,7 @@ console.log('start');
 													if(removeOrNot)
 													{
 														objectNode.remove();
-														toast.show('object removed');
+														//toast.show('object removed');
 													}
 												}); 
 											}

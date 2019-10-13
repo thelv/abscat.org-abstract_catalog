@@ -441,11 +441,11 @@ var toast=
 			clearTimeout(this.timeout);
 			clearTimeout(this.timeout2);
 		}
-		this.timeout2=setTimeout(function(){$('#toast').animate({opacity: '0.83'}, 800);}, 2400);
+		this.timeout2=setTimeout(function(){/*$('#toast').animate({opacity: '0.83'}, 800);*/}, 2400);
 		this.timeout=setTimeout(function()
 		{			
 			$('#toast').fadeOut();
-		}, 4150);
+		}, /*4150*/3700);
 	}
 }
 

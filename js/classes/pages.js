@@ -98,8 +98,8 @@ var pages=
 				Object_.actions.create(null, catId, data, function(objectId)
 				{									
 					//pages.catObj.go(catId, objectId);
-					filter();
-					toast.show('object created');
+					filter(true);
+					//toast.show('object created');
 				}); 
 			});	
 
@@ -143,12 +143,13 @@ var pages=
 			$('#page_catalog .body_menu ._backup').attr('href', '/ajax.php?type=cat&cat_id='+catId).attr('download', 'abscat.org - catalog #'+catId+' - backup.txt');
 		}
 								
-		var filter=function()
-		{			
+		//var
+		filter=function(forceUpdate)
+		{
 			var type=$('#page_catalog .object_filter_type').val();
 			var text=$('#page_catalog .object_filter_text').val();
 			
-			if(! (catIdPrev==catId && filterPrev.type==type && filterPrev.text==text))
+			if(forceUpdate || ! (catIdPrev===catId && filterPrev.type==type && filterPrev.text==text))
 			{
 				$('#page_catalog .object_table').html('');							
 				$('#page_catalog .body_loading').show();			
@@ -241,7 +242,7 @@ var pages=
 				dataExt.get(catId, function(data)
 				{
 					var resultData=sqlRequest(sqlEditor.getText());
-					alert(1);
+					//alert(1);
 					var resultNode=resultTable(resultData.columns, resultData.rows, catId);
 					//var resultNode=resultTableHTML(resultData, catId);
 					//alert(2);
