@@ -29,7 +29,7 @@ person='Bob' mother
 If we wanna to select only person with mother Alice we write: 
 person: mother='Alice'
 
-If we wanna select only mother of person Bob we write: 
+If we wanna select only mother of person Bob and not select Bob himself we write: 
 person='Bob'.mother
 
 So we added dot character (".") after Bob.
