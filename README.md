@@ -26,7 +26,7 @@ person mother
 If we wanna select only person Bob and his mother we write:
 person='Bob' mother
 
-If we wanna to select only person with mother Alice we write: 
+If we wanna to select only person with mother Alice we use double dot (":") character : 
 person: mother='Alice'
 
 If we wanna select only mother of person Bob and not select Bob himself we write: 
