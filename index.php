@@ -103,21 +103,21 @@
 						--><!--<a class=_song_table>
 							$@{song table}
 						</a>--><!--
-						--><a class=_select>
+						--><!--<a class=_select>
 							$@{select objects}
-						</a><!--
+						</a>--><!--
 						--><a class=_backup>
 							backup
 						</a><!--
-						--><a class=_import_harddrive>
+						--><!--<a class=_import_harddrive>
 							$@{import songs (from hard drive/from vk)}
-						</a><!--
+						</a>--><!--
 						--><a class=_sql>
 							sql
 						</a><!--
-						--><a class=_import_harddrive>
+						--><!--<a class=_import_harddrive>
 							$@{more}
-						</a>
+						</a>-->
 					</div>
 				</div>
 				<div class="body_body">
