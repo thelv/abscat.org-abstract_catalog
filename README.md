@@ -39,10 +39,10 @@ person: mother='Alice'.
 Or:
 person: mother.='Alice'
 
-We can use breaks. Lets find all grandsons of Alice: 
+We can use breakets. Lets find all grandsons of Alice: 
 person: (mother='Alice') son
 
-Last "son" word related to "person" word (not to mother) because or breaks.
+Last "son" word related to "person" word (not to mother) because or breakets.
 This request we can rewrite this way:
 person='Alice' son son
 
