@@ -10,7 +10,7 @@ Type and content is just a pieces of text. Any connection connects only two obje
 First is the name of relation from one object to another. And the second is in the opposite way.
 
 For example we have two objects of type "person": Bob and Alice.
-And we have connection bitween them this relation names "mother" (from Bob to Alice) and "son" (from Alice to Bob).
+And we have connection between them with relation names "mother" (from Bob to Alice) and "son" (from Alice to Bob).
 
 We dev some SQL like (actually not really like) language to get interesting selections from catalogs data.
 
