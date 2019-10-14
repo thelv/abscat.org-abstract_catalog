@@ -46,7 +46,7 @@ Last "son" word related to "person" word (not to mother) because or breakets.
 This request we can rewrite this way:
 person='Alice' son son
 
-If we don't want to select Alice and her sons of first gen we just add dots:
+If we don't want to select Alice herself and her sons of first gen we just add dots:
 person='Alice'.son.son
 
 We can use OR (|), AND (^), CONCAT (U). For example select Alice sons and daugthers:
