@@ -105,8 +105,8 @@
 		var path0=Path.create();
 		Path.addBranch(path0, branch0);
 		var paths0=Path.resolveItem(path0, branch0);
-		select('init', req, null, branch0);				
-		paths=select('data', req, paths0, branch0);
+		selectInit(req, null, branch0);				
+		paths=select(req, paths0, branch0);
 		paths=paths.success.concat(paths.fail);
 		console.log(paths);		
 		
@@ -185,310 +185,402 @@
 		}, separate, keepMain);
 	}
 
-	var select=function(type, select_, paths, branch, notSelect, notResult)
-	{	
-		if(type=='init')
-		{
-			if(select_.id) throw new Error();
+
+	var selectInit=function(select_, paths, branch, notSelect, notResult)
+	{
+		if(select_.id) throw new Error();
 			
-			select_.id=++selectId;
-		}
+		select_.id=++selectId;
 		
 		switch(select_.type)
 		{
-			case ',':
-				if(type=='resultColumnOrder')
-				{
-					select('resultColumnOrder', select_.a);
-					select('resultColumnOrder', select_.b);
-				}
-				else if(type=='init')
-				{
-					select('init', select_.a, null, branch, notSelect);
-					select('init', select_.b, null, branch, notSelect);
-				}
-				else
-				{
-					resA=select('data', select_.a, paths, branch, null, notResult);					
-					var resASuccessB=selectEach(['data', select_.b, resA.success, branch, null, notResult], false, true);					
-					var resAFailB=selectEach(['data', select_.b, resA.fail, branch, null, notResult], true, true);									
-					return {
-						success: resASuccessB, 
-						fail: resAFailB //resAFailB.success.concat(resAFailB.fail)
-					};
-				}
+			case ',':				
+				selectInit(select_.a, null, branch, notSelect);
+				selectInit(select_.b, null, branch, notSelect);				
 				break;
 				
 			case '!':
-				if(type=='resultColumnOrder')
-				{
-					select('resultColumnOrder', select_.a);
-				}
-				else if(type=='init')
-				{
-					select('init', select_.a, null, branch, true);
-				}
-				else
-				{											
-					return pathsForEach(paths, function(path)
-					{
-						if(select('data', select_.a, [path], branch, null, notResult).success.length)
-						{
-							return {success: [], fail: [path]};
-						}
-						else
-						{
-							return {success: [path], fail: []};
-						}
-					}, true, true);
-				}
+				selectInit(select_.a, null, branch, true);				
 				break;
 			
 			case '|':
-				if(type=='resultColumnOrder')
-				{
-					select('resultColumnOrder', select_.a);
-					select('resultColumnOrder', select_.b);
-				}
-				else if(type=='init')
-				{
-					select('init', select_.a, null, branch, notSelect);
-					select('init', select_.b, null, branch, notSelect);
-				}
-				else
-				{
-					resA=select('data', select_.a, paths, branch, null, notResult);
-					if(resA.success.length!=0) return resA;
-					
-					resB=select('data', select_.b, paths, branch, null, notResult);				
-					return resB;
-				}
+				selectInit(select_.a, null, branch, notSelect);
+				selectInit(select_.b, null, branch, notSelect);				
 				break;
 				
 			case '^':
-				if(type=='resultColumnOrder')
+				selectInit(select_.a, null, branch, notSelect);
+				selectInit(select_.b, null, branch, notSelect);				
+				break;
+
+			case 'u':
+				selectInit(select_.a, null, branch, notSelect);
+				selectInit(select_.b, null, branch, notSelect);				
+				break;
+				
+			case '(':
+				if(select_.func)
 				{
-					select('resultColumnOrder', select_.a);
-					select('resultColumnOrder', select_.b);
+					funcs[select_.func]=selectClone(select_.a);
 				}
-				else if(type=='init')
+				
+				if(select_.aliasChilds)
+				{					
+					if(! select_.childs)
+					{
+						select_.childs=select_.aliasChilds;
+					}
+					else
+					{					
+						select_.childs=
+						{
+							type: ',',
+							a: select_.childs,
+							b: select_.aliasChilds
+						}
+					}
+				}
+				
+				select_.branch=branch;
+				selectInit(select_.a, null, branch, notSelect || select_.notSelect);
+				break;
+				
+			case 'field':							
+				//alias
+				if(select_.alias)
 				{
-					select('init', select_.a, null, branch, notSelect);
-					select('init', select_.b, null, branch, notSelect);
+					select__=selectClone(select_);
+					select__.conds=[];						
+					select__.alias=false;
+					select__.id=false;
+											
+					select_.type='(';
+					select_.autoCreatedFromAlias=true;
+					select_.notSelect=false;
+					//select_.notSelectUncond=true;
+				
+					select_.childs=select_.aliasChilds;
+					select_.aliasChilds=false;
+					select_.childSelectsInited=[];
+					select_.a=select__;
+					select_.id=false;
+					return selectInit(select_, null, branch, notSelect);
+				}
+		
+				//branch
+				if(! select_.branchConstant)
+				{				
+					var m=false;
+					if(select_.startPoints==1)
+					{
+						var branch_=Branch.add(false, {connection: "", copy: "0"});
+					}
+					else
+					{
+						branch_=branch;
+					}
+							
+					//function
+					if(! select_.connectionQuote && select.connectionOpposite===undefined && funcs[select_.connection])
+					{
+						select__=
+						{
+							type: 'func',
+							func: select_.connection,							
+						};
+						
+						select_.type='(';
+						select_.childSelectsInited=[];
+						//select_.alias=select_.alias || select_.connection;
+						select_.a=select__;
+						select_.id=false;
+						return selectInit(select_, null, branch_, notSelect);
+					}						
+					else
+					{												
+						//field
+						if(select_.connection=='this' || (select_.connection===false))
+						{
+							select_.branch=branch_;
+						}
+						else
+						{
+							select_.branch=Branch.add(branch_, {connection: select_.connection, connectionOpposite: select_.connectionOpposite, copy: select_.copy});										
+						}
+					}
 				}
 				else
-				{							
-					var resA=select('data', select_.a, paths, branch, null, true);
-					var resASuccessB=selectEach(['data', select_.b, resA.success, branch, null, notResult], true, true);
-															
-					if(! notResult) resASuccessB.success=select('data', select_.a, resASuccessB.success, branch, null, false).success;
-					
-					return {
-						success: resASuccessB.success,
-						fail: resA.fail.concat(resASuccessB.fail)
+				{
+					select_.branch=select_.branchConstant;
+				}
+				
+				//result column
+				if(! notSelect && ! select_.notSelect && ! select_.notSelectUncond)
+				{						
+					select_.resultColumn=result.addColumn('field', {branch: select_.branch, param: 'text'});
+				}
+				else
+				{
+					select_.resultColumn=false;
+				}
+				
+				//conds
+				for(var i in select_.conds)
+				{						
+					var cond=select_.conds[i];						
+											
+					switch(cond.type)
+					{
+						case ':':
+							//init cond
+							selectInit(cond.cont, null, select_.branch, notSelect);								
+							break;
+						case 'e':
+							selectInit(cond.cont, null, select_.branch, notSelect);		
+							break;							
 					}
+				}
+				
+				//childs
+				if(select_.childs)
+				{
+					selectInit(select_.childs, null, select_.branch, notSelect);
+				}							
+			
+				break;
+
+			case 'func':				
+				select_.initParams=
+				{
+					branch: branch,
+					notSelect: notSelect
+				}				
+				break;
+		}
+		
+	}
+	
+	selectResultColumnOrder=function(select_, paths, branch, notSelect, notResult)
+	{
+		switch(select_.type)
+		{
+			case ',':				
+				selectResultColumnOrder(select_.a);
+				selectResultColumnOrder(select_.b);				
+				break;
+				
+			case '!':
+				selectResultColumnOrder(select_.a);				
+				break;
+			
+			case '|':			
+				selectResultColumnOrder(select_.a);
+				selectResultColumnOrder(select_.b);				
+				break;
+				
+			case '^':
+				selectResultColumnOrder(select_.a);
+				selectResultColumnOrder(select_.b);				
+				break;
+
+			case 'u':				
+				selectResultColumnOrder(select_.a);
+				selectResultColumnOrder(select_.b);				
+				break;
+				
+			case '(':
+				selectResultColumnOrder(select_.a);
+				for(var i in select_.childSelectsInited)
+				{
+					selectResultColumnOrder(select_.childSelectsInited[i]);
+				}
+				break;
+				
+			case 'field':				
+				if(select_.resultColumn)
+				{
+					if(select_.resultColumn.order===undefined)
+					{
+						select_.resultColumn.order=(0+(resultColumnOrder++));
+					}
+				}
+				
+				//conds
+				for(var i in select_.conds)
+				{						
+					var cond=select_.conds[i];						
+											
+					switch(cond.type)
+					{
+						case ':':
+							selectResultColumnOrder(cond.cont);								
+							break;
+						case 'e':
+							selectResultColumnOrder(cond.cont);		
+							break;								
+					}
+				}
+				
+				//childs
+				if(select_.childs)
+				{
+					selectResultColumnOrder(select_.childs);
+				}
+				break;
+
+			case 'func':
+				//
+				break;
+		}
+	}
+	
+	var select=function(select_, paths, branch, notSelect, notResult)
+	{	
+		switch(select_.type)
+		{
+			case ',':				
+				resA=select(select_.a, paths, branch, null, notResult);					
+				var resASuccessB=selectEach(['data', select_.b, resA.success, branch, null, notResult], false, true);					
+				var resAFailB=selectEach(['data', select_.b, resA.fail, branch, null, notResult], true, true);									
+				return {
+					success: resASuccessB, 
+					fail: resAFailB //resAFailB.success.concat(resAFailB.fail)
+				};
+				break;
+				
+			case '!':														
+				return pathsForEach(paths, function(path)
+				{
+					if(select(select_.a, [path], branch, null, notResult).success.length)
+					{
+						return {success: [], fail: [path]};
+					}
+					else
+					{
+						return {success: [path], fail: []};
+					}
+				}, true, true);
+				break;
+			
+			case '|':
+				resA=select(select_.a, paths, branch, null, notResult);
+				if(resA.success.length!=0) return resA;
+				
+				resB=select(select_.b, paths, branch, null, notResult);				
+				return resB;
+				break;
+				
+			case '^':											
+				var resA=select(select_.a, paths, branch, null, true);
+				var resASuccessB=selectEach(['data', select_.b, resA.success, branch, null, notResult], true, true);
+														
+				if(! notResult) resASuccessB.success=select(select_.a, resASuccessB.success, branch, null, false).success;
+				
+				return {
+					success: resASuccessB.success,
+					fail: resA.fail.concat(resASuccessB.fail)
 				}
 				break;
 
 			case 'u':
-				if(type=='resultColumnOrder')
-				{
-					select('resultColumnOrder', select_.a);
-					select('resultColumnOrder', select_.b);
-				}
-				else if(type=='init')
-				{
-					select('init', select_.a, null, branch, notSelect);
-					select('init', select_.b, null, branch, notSelect);
-				}
-				else
-				{	
-					return pathsForEach(paths, function(path)
-					{						
-						if(path._selectChoises[select_.a.id])
+				return pathsForEach(paths, function(path)
+				{						
+					if(path._selectChoises[select_.a.id])
+					{
+						return select(select_.a, [path], branch, null, notResult);							
+					}
+					else if(path._selectChoises[select_.b.id])
+					{
+						return select(select_.b, [path], branch, null, notResult);
+					}
+					else
+					{							
+						var resA=select(select_.a, [path], branch, null, notResult);				
+						for(var i in resA.success)
 						{
-							return select('data', select_.a, [path], branch, null, notResult);							
+							resA.success[i]._selectChoises[select_.a.id]=true;
 						}
-						else if(path._selectChoises[select_.b.id])
+						var resB=select(select_.b, [path], branch, null, notResult);				
+						for(var i in resB.success)
 						{
-							return select('data', select_.b, [path], branch, null, notResult);
-						}
-						else
-						{							
-							var resA=select('data', select_.a, [path], branch, null, notResult);				
-							for(var i in resA.success)
-							{
-								resA.success[i]._selectChoises[select_.a.id]=true;
-							}
-							var resB=select('data', select_.b, [path], branch, null, notResult);				
-							for(var i in resB.success)
-							{
-								resB.success[i]._selectChoises[select_.b.id]=true;
-							}							
-							return {success: resA.success.concat(resB.success), fail: []};
-						}
-					}, true);
-				}
+							resB.success[i]._selectChoises[select_.b.id]=true;
+						}							
+						return {success: resA.success.concat(resB.success), fail: []};
+					}
+				}, true);
 				break;
 				
 			case '(':
-				if(type=='resultColumnOrder')
+				//содержимое скобки без вывода полей					
+				var resA=select(select_.a, paths, branch, null, true);
+				
+				//продолжение скобки
+				var resASuccessChilds=pathsForEach(resA.success, function(path)
 				{
-					select('resultColumnOrder', select_.a);
-					for(var i in select_.childSelectsInited)
-					{
-						select('resultColumnOrder', select_.childSelectsInited[i]);
-					}
-				}
-				else if(type=='init')
-				{					
-					if(select_.func)
-					{
-						funcs[select_.func]=selectClone(select_.a);
-					}
-					
-					if(select_.aliasChilds)
-					{					
-						if(! select_.childs)
-						{
-							select_.childs=select_.aliasChilds;
-						}
-						else
-						{					
-							select_.childs=
+					if(path._mainSelect)
+					{													
+						if(! select_.childSelectsInited[path._mainSelect.id])
+						{	
+							if(select_.autoCreatedFromAlias)
 							{
-								type: ',',
-								a: select_.childs,
-								b: select_.aliasChilds
+								path._mainSelect.select.notSelectUncond=true;
+								result.removeColumn(path._mainSelect.select.resultColumn);								
+								delete path._mainSelect.select.resultColumn;				
 							}
-						}
-					}
-					
-					select_.branch=branch;
-					select('init', select_.a, null, branch, notSelect || select_.notSelect);
-				}
-				else
-				{
-					//содержимое скобки без вывода полей					
-					var resA=select('data', select_.a, paths, branch, null, true);
-					
-					//продолжение скобки
-					var resASuccessChilds=pathsForEach(resA.success, function(path)
-					{
-						if(path._mainSelect)
-						{													
-							if(! select_.childSelectsInited[path._mainSelect.id])
-							{	
-								if(select_.autoCreatedFromAlias)
-								{
-									path._mainSelect.select.notSelectUncond=true;
-									result.removeColumn(path._mainSelect.select.resultColumn);								
-									delete path._mainSelect.select.resultColumn;				
-								}
-								
-								var childBranch=Branch.clone(path._mainSelect.branch);						
-								if(select_.alias)
-								{
-									Branch.setLast(childBranch, {alias: {type: 'string', baseBranch: select_.branch, cont: select_.alias || "()"}});								
-								}
-						
-								var childSelect=
-								{
-									type: 'field', 
-									branchConstant: childBranch,
-									conds: selectClone(select_.conds), 
-									notSelect: select_.notSelect, notSelectUncond: select_.autoCreatedFromAlias ? path._mainSelect.select.notSelect : (! select_.alias), //(select_.a.type!='|' && select_.a.type!='^' && select_.a.type!='u'), 
-									childs: selectClone(select_.childs)
-								};
-								select_.childSelectsInited[path._mainSelect.id]=childSelect;
-								
-								select('init', childSelect, null, null, notSelect);											
-							}														
 							
-							var childSelect=select_.childSelectsInited[path._mainSelect.id];
-							
+							var childBranch=Branch.clone(path._mainSelect.branch);						
 							if(select_.alias)
-							{								
-								path._aliases.push({type: 'string', baseBranch: select_.branch, cont: select_.alias || "()", branch: childSelect.branchConstant});
+							{
+								Branch.setLast(childBranch, {alias: {type: 'string', baseBranch: select_.branch, cont: select_.alias || "()"}});								
 							}
-							
-							return select('data', childSelect, [path], null, null, notResult);
-						}
-						else
-						{
-							//asasda.asdasd=1;
-							return {success: [path], fail: []}
-						}
-					}, true, false);
-									
-
-					//выводим поля
-					if(! notResult) resASuccessChilds.success=select('data', select_.a, resASuccessChilds.success, branch, null, false).success;					
 					
-					return {success: resASuccessChilds.success, fail: resASuccessChilds.fail.concat(resA.fail)};					
-				}
+							var childSelect=
+							{
+								type: 'field', 
+								branchConstant: childBranch,
+								conds: selectClone(select_.conds), 
+								notSelect: select_.notSelect, notSelectUncond: select_.autoCreatedFromAlias ? path._mainSelect.select.notSelect : (! select_.alias), //(select_.a.type!='|' && select_.a.type!='^' && select_.a.type!='u'), 
+								childs: selectClone(select_.childs)
+							};
+							select_.childSelectsInited[path._mainSelect.id]=childSelect;
+							
+							selectInit(childSelect, null, null, notSelect);											
+						}														
+						
+						var childSelect=select_.childSelectsInited[path._mainSelect.id];
+						
+						if(select_.alias)
+						{								
+							path._aliases.push({type: 'string', baseBranch: select_.branch, cont: select_.alias || "()", branch: childSelect.branchConstant});
+						}
+						
+						return select(childSelect, [path], null, null, notResult);
+					}
+					else
+					{
+						//asasda.asdasd=1;
+						return {success: [path], fail: []}
+					}
+				}, true, false);
+								
+
+				//выводим поля
+				if(! notResult) resASuccessChilds.success=select(select_.a, resASuccessChilds.success, branch, null, false).success;					
+				
+				return {success: resASuccessChilds.success, fail: resASuccessChilds.fail.concat(resA.fail)};					
+				
 				break;
 				
 			case 'field':
-				if(type=='resultColumnOrder')
+				var paths_=paths;
+				var successs=[];
+				var fails=[];
+				for(var i in paths_)
 				{
-					if(select_.resultColumn)
-					{
-						if(select_.resultColumn.order===undefined)
-						{
-							select_.resultColumn.order=(0+(resultColumnOrder++));
-						}
-					}
-					
-					//conds
-					for(var i in select_.conds)
-					{						
-						var cond=select_.conds[i];						
-												
-						switch(cond.type)
-						{
-							case ':':
-								select('resultColumnOrder', cond.cont);								
-								break;
-							case 'e':
-								select('resultColumnOrder', cond.cont);		
-								break;								
-						}
-					}
-					
-					//childs
-					if(select_.childs)
-					{
-						select('resultColumnOrder', select_.childs);
-					}
-				}
-				else if(type=='init')
-				{			
-					//alias
-					if(select_.alias)
-					{
-						select__=selectClone(select_);
-						select__.conds=[];						
-						select__.alias=false;
-						select__.id=false;
-												
-						select_.type='(';
-						select_.autoCreatedFromAlias=true;
-						select_.notSelect=false;
-						//select_.notSelectUncond=true;
-					
-						select_.childs=select_.aliasChilds;
-						select_.aliasChilds=false;
-						select_.childSelectsInited=[];
-						select_.a=select__;
-						select_.id=false;
-						return select('init', select_, null, branch, notSelect);
-					}
-			
-					//branch
+					paths=[paths_[i]];
+																	
 					if(! select_.branchConstant)
-					{				
-						var m=false;
+					{
 						if(select_.startPoints==1)
 						{
 							var branch_=Branch.add(false, {connection: "", copy: "0"});
@@ -497,223 +589,219 @@
 						{
 							branch_=branch;
 						}
-								
-						//function
-						if(! select_.connectionQuote && select.connectionOpposite===undefined && funcs[select_.connection])
+						
+						var select_Branch=false;
+						var path=paths[0];
+						for(var i in path._aliases)
 						{
-							select__=
+							var alias=path._aliases[i];
+							if(alias.cont==select_.connection && Branch.toStringAlias(branch_)==Branch.toStringAlias(alias.baseBranch))
 							{
-								type: 'func',
-								func: select_.connection,							
-							};
-							
-							select_.type='(';
-							select_.childSelectsInited=[];
-							//select_.alias=select_.alias || select_.connection;
-							select_.a=select__;
-							select_.id=false;
-							return select('init', select_, null, branch_, notSelect);
-						}						
-						else
-						{												
-							//field
+								select_Branch=alias.branch;
+								break;
+							}
+						}
+						if(! select_Branch)
+						{															
 							if(select_.connection=='this' || (select_.connection===false))
 							{
-								select_.branch=branch_;
+								select_Branch=branch_;
 							}
 							else
 							{
-								select_.branch=Branch.add(branch_, {connection: select_.connection, connectionOpposite: select_.connectionOpposite, copy: select_.copy});										
-							}
+								select_Branch=Branch.add(branch_, {connection: select_.connection, connectionOpposite: select_.connectionOpposite, copy: select_.copy});										
+							}								
 						}
 					}
 					else
 					{
-						select_.branch=select_.branchConstant;
+						select_Branch=select_.branch;
 					}
-					
-					//result column
-					if(! notSelect && ! select_.notSelect && ! select_.notSelectUncond)
-					{						
-						select_.resultColumn=result.addColumn('field', {branch: select_.branch, param: 'text'});
-					}
-					else
+						
+					//resolve paths
+					var pathsResolved=[];
+					for(var i in paths)
 					{
-						select_.resultColumn=false;
+						var path=paths[i];
+						Path.addBranch(path, select_Branch);
+						pathsResolved=pathsResolved.concat(Path.resolveItem(path, select_Branch));
 					}
+													
+					//conds "=", "<", ">" ...
+					var success=[];
+					var fail=[];
+					for(var i in pathsResolved)
+					{					
+						var path=pathsResolved[i];
+						var pathItem=Path.getBranchItem(path, select_Branch);
+						var objectId=pathItem.objectId;
 					
-					//conds
-					for(var i in select_.conds)
-					{						
-						var cond=select_.conds[i];						
-												
-						switch(cond.type)
+						var condsSuccess=true;										
+						if(objectId===false)
 						{
-							case ':':
-								//init cond
-								select('init', cond.cont, null, select_.branch, notSelect);								
-								break;
-							case 'e':
-								select('init', cond.cont, null, select_.branch, notSelect);		
-								break;							
+							condsSuccess=false;
 						}
-					}
-					
-					//childs
-					if(select_.childs)
-					{
-						select('init', select_.childs, null, select_.branch, notSelect);
-					}							
-				}
-				else if(type=='data')
-				{	
-					var paths_=paths;
-					var successs=[];
-					var fails=[];
-					for(var i in paths_)
-					{
-						paths=[paths_[i]];
-																		
-						if(! select_.branchConstant)
-						{
-							if(select_.startPoints==1)
-							{
-								var branch_=Branch.add(false, {connection: "", copy: "0"});
-							}
-							else
-							{
-								branch_=branch;
-							}
-							
-							var select_Branch=false;
-							var path=paths[0];
-							for(var i in path._aliases)
-							{
-								var alias=path._aliases[i];
-								if(alias.cont==select_.connection && Branch.toStringAlias(branch_)==Branch.toStringAlias(alias.baseBranch))
+						else if(! (objectId===0))
+						{												
+							var value=data.objects[objectId].text;
+							f: for(var j in select_.conds)
+							{						
+								var cond=select_.conds[j];
+								if(typeof cond.cont=='number')
 								{
-									select_Branch=alias.branch;
-									break;
-								}
-							}
-							if(! select_Branch)
-							{															
-								if(select_.connection=='this' || (select_.connection===false))
-								{
-									select_Branch=branch_;
+									var valueTypeCasted=parseFloat(value);
 								}
 								else
 								{
-									select_Branch=Branch.add(branch_, {connection: select_.connection, connectionOpposite: select_.connectionOpposite, copy: select_.copy});										
-								}								
+									var valueTypeCasted=value;								
+								}
+								switch(cond.type)
+								{
+									case '=':
+										if(! (valueTypeCasted==cond.cont))
+										{
+											condsSuccess=false;
+											break f;
+										}
+										break;
+									case '>':
+										if(! (valueTypeCasted>cond.cont))
+										{
+											condsSuccess=false;
+											break f;
+										}
+										break;
+									case '<':
+										if(! (valueTypeCasted<cond.cont))
+										{
+											condsSuccess=false;
+											break f;
+										}
+										break;
+									case '>=':
+										if(! (valueTypeCasted>=cond.cont))
+										{
+											condsSuccess=false;
+											break f;
+										}
+										break;
+									case '<=':
+										if(! (valueTypeCasted<=cond.cont))
+										{
+											condsSuccess=false;
+											break f;
+										}
+										break;
+									case '<>':
+										if(! (valueTypeCasted!=cond.cont))
+										{
+											condsSuccess=false;
+											break f;
+										}
+										break;
+									
+								}
 							}
+						}											
+						if(condsSuccess)
+						{				
+							if(select_.resultColumn)
+							{		
+								if(! pathItem.data.results) pathItem.data.results=[];
+								pathItem.data.results['text']=value;
+							}
+							success.push(path);
 						}
 						else
 						{
-							select_Branch=select_.branch;
+							fail.push(path);
 						}
-							
-						//resolve paths
-						var pathsResolved=[];
-						for(var i in paths)
-						{
-							var path=paths[i];
-							Path.addBranch(path, select_Branch);
-							pathsResolved=pathsResolved.concat(Path.resolveItem(path, select_Branch));
-						}
-														
-						//conds "=", "<", ">" ...
-						var success=[];
-						var fail=[];
-						for(var i in pathsResolved)
-						{					
-							var path=pathsResolved[i];
-							var pathItem=Path.getBranchItem(path, select_Branch);
-							var objectId=pathItem.objectId;
+					}
 						
-							var condsSuccess=true;										
-							if(objectId===false)
-							{
-								condsSuccess=false;
-							}
-							else if(! (objectId===0))
-							{												
-								var value=data.objects[objectId].text;
-								f: for(var j in select_.conds)
-								{						
-									var cond=select_.conds[j];
-									if(typeof cond.cont=='number')
-									{
-										var valueTypeCasted=parseFloat(value);
+					//conds ":", "e"
+					for(var j in select_.conds)
+					{						
+						var cond=select_.conds[j];						
+						
+						switch(cond.type)
+						{
+							case ':':
+								//select cond								
+								var resCond=pathsForEach(success, function(path)
+								{
+									return select(cond.cont, [path], select_Branch, null, true);						
+								}, true, true);
+																								
+								success=resCond.success;
+								fail=fail.concat(resCond.fail);
+								
+								break;
+							case 'e':
+								//select cond								
+								var resCond=pathsForEach(success, function(path)
+								{									
+									var objectId=Path.getBranchItem(path, select_Branch).objectId;									
+									var resCond_=select(cond.cont, [path], select_Branch, null, true);
+									var resCond__={success: [], fail: resCond_.fail};
+									for(var i in resCond_.success)
+									{										
+										var path_=resCond_.success[i];									
+										if(path_._mainObjectId==objectId)
+										{											
+											resCond__.success.push(path_);
+										}
+										else
+										{
+											resCond__.fail.push(path_);
+										}
 									}
-									else
-									{
-										var valueTypeCasted=value;								
-									}
-									switch(cond.type)
-									{
-										case '=':
-											if(! (valueTypeCasted==cond.cont))
-											{
-												condsSuccess=false;
-												break f;
-											}
-											break;
-										case '>':
-											if(! (valueTypeCasted>cond.cont))
-											{
-												condsSuccess=false;
-												break f;
-											}
-											break;
-										case '<':
-											if(! (valueTypeCasted<cond.cont))
-											{
-												condsSuccess=false;
-												break f;
-											}
-											break;
-										case '>=':
-											if(! (valueTypeCasted>=cond.cont))
-											{
-												condsSuccess=false;
-												break f;
-											}
-											break;
-										case '<=':
-											if(! (valueTypeCasted<=cond.cont))
-											{
-												condsSuccess=false;
-												break f;
-											}
-											break;
-										case '<>':
-											if(! (valueTypeCasted!=cond.cont))
-											{
-												condsSuccess=false;
-												break f;
-											}
-											break;
-										
-									}
-								}
-							}											
-							if(condsSuccess)
-							{				
-								if(select_.resultColumn)
-								{		
-									if(! pathItem.data.results) pathItem.data.results=[];
-									pathItem.data.results['text']=value;
-								}
-								success.push(path);
-							}
-							else
-							{
-								fail.push(path);
-							}
+									return resCond__;
+								}, true, true);
+																								
+								success=resCond.success;
+								fail=fail.concat(resCond.fail);
+								
+								break;							
 						}
-							
-						//conds ":", "e"
+					}					
+					
+					var res={success: success, fail: fail};										
+					
+					//childs
+					if(select_.childs)
+					{												
+						var resChilds=pathsForEach(res.success, function(path)
+						{
+							return select(select_.childs, [path], select_Branch, null, notResult);						
+						}, select_.notSelect);
+						
+						//this filter by childs or not
+						if(select_.notSelect)
+						{
+							success=resChilds.success;
+							fail=res.fail.concat(resChilds.fail);
+						}
+						else
+						{
+							success=resChilds;
+							fail=res.fail;
+						}
+					}
+					
+					//result columns
+					if(! notResult && select_.resultColumn)
+					{
+						for(var i in success)
+						{
+							var path=success[i];
+							var pathItem=Path.getBranchItem(path, select_Branch);
+							if(! pathItem.data.columns) pathItem.data.columns=[];
+							pathItem.data.columns=pathItem.data.columns.concat({column: select_.resultColumn, param: 'text'});
+						}
+					}
+					
+					if(! notResult)
+					{
 						for(var j in select_.conds)
 						{						
 							var cond=select_.conds[j];						
@@ -721,10 +809,10 @@
 							switch(cond.type)
 							{
 								case ':':
-									//select cond								
+									//select cond																	
 									var resCond=pathsForEach(success, function(path)
 									{
-										return select('data', cond.cont, [path], select_Branch, null, true);						
+										return select(cond.cont, [path], select_Branch, null, false);
 									}, true, true);
 																									
 									success=resCond.success;
@@ -736,13 +824,13 @@
 									var resCond=pathsForEach(success, function(path)
 									{									
 										var objectId=Path.getBranchItem(path, select_Branch).objectId;									
-										var resCond_=select('data', cond.cont, [path], select_Branch, null, true);
+										var resCond_=select(cond.cont, [path], select_Branch, null, false);
 										var resCond__={success: [], fail: resCond_.fail};
 										for(var i in resCond_.success)
 										{										
 											var path_=resCond_.success[i];									
 											if(path_._mainObjectId==objectId)
-											{											
+											{
 												resCond__.success.push(path_);
 											}
 											else
@@ -758,133 +846,38 @@
 									
 									break;							
 							}
-						}					
-						
-						var res={success: success, fail: fail};										
-						
-						//childs
-						if(select_.childs)
-						{												
-							var resChilds=pathsForEach(res.success, function(path)
-							{
-								return select('data', select_.childs, [path], select_Branch, null, notResult);						
-							}, select_.notSelect);
-							
-							//this filter by childs or not
-							if(select_.notSelect)
-							{
-								success=resChilds.success;
-								fail=res.fail.concat(resChilds.fail);
-							}
-							else
-							{
-								success=resChilds;
-								fail=res.fail;
-							}
-						}
-						
-						//result columns
-						if(! notResult && select_.resultColumn)
-						{
-							for(var i in success)
-							{
-								var path=success[i];
-								var pathItem=Path.getBranchItem(path, select_Branch);
-								if(! pathItem.data.columns) pathItem.data.columns=[];
-								pathItem.data.columns=pathItem.data.columns.concat({column: select_.resultColumn, param: 'text'});
-							}
-						}
-						
-						if(! notResult)
-						{
-							for(var j in select_.conds)
-							{						
-								var cond=select_.conds[j];						
-								
-								switch(cond.type)
-								{
-									case ':':
-										//select cond																	
-										var resCond=pathsForEach(success, function(path)
-										{
-											return select('data', cond.cont, [path], select_Branch, null, false);
-										}, true, true);
-																										
-										success=resCond.success;
-										fail=fail.concat(resCond.fail);
-										
-										break;
-									case 'e':
-										//select cond								
-										var resCond=pathsForEach(success, function(path)
-										{									
-											var objectId=Path.getBranchItem(path, select_Branch).objectId;									
-											var resCond_=select('data', cond.cont, [path], select_Branch, null, false);
-											var resCond__={success: [], fail: resCond_.fail};
-											for(var i in resCond_.success)
-											{										
-												var path_=resCond_.success[i];									
-												if(path_._mainObjectId==objectId)
-												{
-													resCond__.success.push(path_);
-												}
-												else
-												{
-													resCond__.fail.push(path_);
-												}
-											}
-											return resCond__;
-										}, true, true);
-																										
-										success=resCond.success;
-										fail=fail.concat(resCond.fail);
-										
-										break;							
-								}
-							}	
-						}
-
-						if(! select_.notSelect || ! select_.childs)
-						{
-							for(var i in success)
-							{
-								var path=success[i];
-								var pathItem=Path.getBranchItem(path, select_Branch);
-								path._mainObjectId=pathItem.objectId;
-								path._mainSelect={id: Branch.toString(select_Branch), branch: select_Branch, select: select_};
-							}													
 						}	
-
-						successs=successs.concat(success);
-						fails=fails.concat(fail);						
 					}
-					return {success: successs, fail: fails};
+
+					if(! select_.notSelect || ! select_.childs)
+					{
+						for(var i in success)
+						{
+							var path=success[i];
+							var pathItem=Path.getBranchItem(path, select_Branch);
+							path._mainObjectId=pathItem.objectId;
+							path._mainSelect={id: Branch.toString(select_Branch), branch: select_Branch, select: select_};
+						}													
+					}	
+
+					successs=successs.concat(success);
+					fails=fails.concat(fail);						
 				}
+				return {success: successs, fail: fails};
 				break;
 
 			case 'func':
-				if(type=='init')
+				//delayed init
+				if(select_.initParams)
 				{
-					select_.initParams=
-					{
-						branch: branch,
-						notSelect: notSelect
-					}
+					var initParams=select_.initParams;
+					select__=selectClone(funcs[select_.func]);
+					objectCloneTo(select__, select_);
+					select_.initParams=false;
+					selectInit(select_, null, branch, initParams.notSelect);
 				}
-				if(type=='data')
-				{
-					//delayed init
-					if(select_.initParams)
-					{
-						var initParams=select_.initParams;
-						select__=selectClone(funcs[select_.func]);
-						objectCloneTo(select__, select_);
-						select_.initParams=false;
-						select('init', select_, null, branch, initParams.notSelect);
-					}
-					
-					return select('data', select_, paths, branch, null, notResult);
-				}
+				
+				return select(select_, paths, branch, null, notResult);
 				break;
 		}
 	}
@@ -971,7 +964,7 @@
 				order++;
 			}*/
 			resultColumnOrder=0;
-			select('resultColumnOrder', select_);
+			selectResultColumnOrder(select_);
 			var columns_=[];
 			for(var i in this.columns)
 			{
