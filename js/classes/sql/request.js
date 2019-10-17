@@ -211,7 +211,7 @@
 				{
 					resA=select('data', select_.a, paths, branch, null, notResult);					
 					var resASuccessB=selectEach(['data', select_.b, resA.success, branch, null, notResult], false, true);					
-					var resAFailB=selectEach(['data', select_.b, resA.fail, branch, null, notResult], true, true);									
+					var resAFailB=selectEach(['data', select_.b, resA.fail, branch, null, notResult], false, true);									
 					return {
 						success: resASuccessB, 
 						fail: resAFailB //resAFailB.success.concat(resAFailB.fail)

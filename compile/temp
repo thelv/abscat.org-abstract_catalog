@@ -1,882 +1,659 @@
-﻿<?php
+function arrayAvailableIndex(a)
+{
+	var m=0;
+	for(var i in a) m=i;
+	return ++m;
+}
 
-	//ini_set('display_errors', 1);	
+function dataGetTypeColor(data, type)
+{
+	var color='';
+	for(var i in data.objects)
+	{
+		if(data.objects[i].type==type)
+		{
+			return data.objects[i].color;
+		}
+	}
+}
 
-	include 'lib/auth.php';
+var styling=
+{
+	setted: false,
+	cached: false,
+	style: {background: 'rgb(14, 61, 91) url(http://www.planwallpaper.com/static/images/cool-background.jpg)', textColor: '#ddd', linkColor: 'aaf', border: '#004'},
 	
-	$cache=false;
-?>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<meta name=viewport content='width=700px'>
-		<link rel="icon" href="/img/abscat8.png" type="image/x-png" />
-		<title>Abstract Catalog</title>				
-		<link rel="stylesheet" type="text/css" href="/css/main.css?3<?php echo ! $cache ? rand(1,1000000) : ''; ?>" />
-		<style id="css_head"></style>
-	</head>
-	<body><div>	
-		<div id="image_preloader"></div>
-		<div id="head"><div><div class=head_background id=head_background1></div><div class=head_background id=head_background2></div>			
-			<h1>
-				Abstract Catalog
-			</h1>
-			<div id="head_menu">			
-				<div>
-					<a class="_about" href="/" onclick="return false">
-						about project
-					</a>
-				</div>
-				<div class="_cats">
-					<a href="/cats" onclick="return false">
-						all catalogs
-					</a>					
-				</div>
-				<div>
-					<a class="_my_cat" href="/cat0" onclick="return false">
-						my catalog
-					</a>
-				</div>		
-			</div>		
-			<div id="profile">				
-					<!--
-				 --><?php
-					
-						if(! $user)
-						{
-							
-					?><!--
-					
-						-->login: <!--
-						--><div id="uLogin" data-ulogin="display=small;theme=classic;fields=first_name,last_name,photo;providers=vkontakte,odnoklassniki,mailru,facebook;hidden=other;redirect_uri=http%3A%2F%2Fabscat.org<?php echo urlencode($_SERVER['REQUEST_URI']); ?>;mobilebuttons=0;"><span style='color:#888'>...</span></div>
-					<?
-					
-						}else{
-							
-					?><!--
-						
-						--><span id=profile_header>User:</span><span class=_name><?= $user['first_name'].' '.$user['last_name'] ?></span><a id=logout>logout</a>
-						
-					<?
-					
-						}
-						
-					?>
-					
-			</div>
-		</div></div>	
+	set: function()
+	{		
+		return;
+		if(! this.cashed)
+		{
+			var backgroundPos='';//parseInt(Math.random()*10000)+'px '+parseInt(Math.random()*10000)+'px';
+			var backgroundPos2='';//parseInt(Math.random()*10000)+'px '+parseInt(Math.random()*10000)+'px';
+			$('#css_head').html('#head > div{background:transparent !important;border-color:'+this.style.border+' !important}#head{color:'+this.style.textColor+' !important}#head a{color:'+this.style.linkColor+' !important}');
+			$('head').append($('<style class=css_head>').html(''+
+			'#head_background2{background:'+this.style.background+' '+backgroundPos+' !important'+'}'+
+			'#head_background1{background:'+this.style.background+' '+backgroundPos2+' !important'+'}'));
+			$('#head_background1').show();
+			this.setted=true;
+			this.cashed=true;
+		}
+		else if(this.setted)
+		{
+			/*var backgroundPos=parseInt(Math.random()*10000)+'px '+parseInt(Math.random()*10000)+'px';
+			$('head').append($('<style class=css_head>').html(''+
+			'#'+$('.head_background:visible').attr('id')+'{background:'+this.style.background+' '+backgroundPos+' !important'+'}'));
+			var headBackgroundNodeHidden=$('.head_background:hidden').eq(0);
+			$('.head_background:visible').hide().css({'background': this.style.background+' '+backgroundPos+' !important'});
+			headBackgroundNodeHidden.show();			*/
+		}
+		else
+		{			
+			var backgroundPos='';//parseInt(Math.random()*10000)+'px '+parseInt(Math.random()*10000)+'px';
+			$('#css_head').html('#head > div{background:transparent !important;border-color:'+this.style.border+' !important}#head{color:'+this.style.textColor+' !important}#head a{color:'+this.style.linkColor+' !important}');
+			$('head').append($('<style class=css_head>').html(''+
+			'#head_background2{background:'+this.style.background+' '+backgroundPos+' !important'+'}'));			
+			$('#head_background2').hide().css({'background': this.style.background+' '+backgroundPos+' !important'});
+			$('#head_background1').show();
+			this.setted=true;
+		}
+	},
+	clear: function()
+	{
+		$('head_background').hide();
+		this.setted=false;
+		$('#css_head').html('');
+	}
+}			
+
+var state=
+{
+	page: false
+}
+
+var save=new (function()
+{
+	var timeout=false;
+	
+	this.save=function(catId, data)
+	{
+		clearTimeout(timeout);
+		$('#save').show();
+		$('#save').html('uploading...');
+		dataExt.set(catId, data, function()
+		{
+			$('#save').html('uploaded<!--?-->');
+			timeout=setTimeout(function(){$('#save').hide();$('#save').html('');}, 4000/*6500*/);
+		});
+		help.show(data, catId);
+	}
+})();
+
+var dataExt=
+{
+	cache: 
+	{
+		data: {},		
+		get: function(catId)
+		{
+			return this.data[catId] || false;	
+		},
+		set: function(catId, data)
+		{
+			this.data={};
+			this.data[catId]=data;
+		}
+	},
+	
+	get: function(catId, callback)
+	{		
+		var cache=false;
+		if(cache=this.cache.get(catId))
+		{
+			callback(cache);
+			return;
+		}
 		
-		<div id="body">
-			<div id="initial_loading">
-				<div></div>
-				<img src="/img/loading.gif">
-			</div>
-			<div id="page_about" class="page">
-			<div class="body_head">
-					About Project
-				</div>
-				<div class="body_body">
-					You can create <a class="_my_cat_link _link">your own catalog</a> or discover other people <a class="_cats_link _link">catalogs</a>.
-					<br><br>
-					Github page: <a target=_blank class=_link href=https://github.com/thelv/abscat.org-abstract_catalog>https://github.com/thelv/abscat.org-abstract_catalog</a>.
-				</div>				
-			</div>
-			<div id="page_cats" class="page">
-				<div class="body_head">
-					All Catalogs
-				</div>
-				<div class="body_body">					
-					<!-- -->
-				</div>
-				<div class="body_loading">
-					<div></div>
-					<img src="/img/loading.gif">
-				</div>
-			</div>
-			<div id="page_catalog" class="page">
-				<div class=_fix_on_scroll>
-					<div class="body_head">
-						My catalog
-					</div>
-					<div class="body_menu">
-						<a class=_object_new>
-							create new object
-						</a><!--
-						--><!--<a class=_song_table>
-							song table
-						</a>--><!--
-						--><!--<a class=_select>
-							select objects
-						</a>--><!--
-						--><a class=_backup>
-							backup
-						</a><!--
-						--><!--<a class=_import_harddrive>
-							import songs (from hard drive/from vk)
-						</a>--><!--
-						--><a class=_sql>
-							sql
-						</a><!--
-						--><!--<a class=_import_harddrive>
-							more
-						</a>-->
-					</div>
-				</div>
-				<div class="body_body">
-				
-					<!-- <div class="_fix_on_scroll" style='vertical-align-:middle;margin-top:9px;margin-bottom:0px'>View: <input style='vertical-align:-3px' type=radio name=11 checked=checked> object lists <input style='margin-left:2px;vertical-align:-3px' type=radio name=11> song table </div> -->
-					<!-- <div class=help>
-						<b style='color:rgb(238, 68, 68);'>Warning:</b> where is some catalog you build while beeing NOT logged in. To do NOT lose it you can <a class=__blue>export it in file</a>. Or just <a class=__blue>send it to trash</a>.
-					</div> -->
-					<div class=help id=help_create style='margin-top:9px'>
-						<b style=''>Help:</b> Your catalog is empty for now. Press "create new object" link above this text and add your first "song".
-					</div>
-					<div id=help_login class=help style='margin-top:10px;margin-bottom:0px'>
-						<b style='color:#888;float:left;padding-right:7px'>Warning:</b><div style='overflow:hidden'>You are not logged in. To do not loose your job better be. Login is on the top right corner ;)<a style='padding-left:7px' onclick='help.loginHide()' class=__blue>close</a> </div>
-					</div>
-					<div class=_fix_on_scroll>
-						<!-- <div class="object_filter">
-							<form>
-								Catalog view: <input type=radio checked=checked> object lists &nbsp; <input type=radio> song table  &nbsp; <input type=radio> song catalog with song counters 
-							</form>
-						</div> -->
-						<div class="object_filter">
-							<form>
-								Object filter: type~ <input class=object_filter_type type=text>, text~ <input class=object_filter_text type=text>
-								<input type=submit value=ok> <input type=reset value=clear>
-							</form>
-						</div>
-					</div>
-					<div class=help  id=help_create_second style='margin-top:11px;margin-bottom:-2px'>
-						<b style=''>Ok, then:</b> Your first object created! Let's add "music genre" (rock, for example). Press "create new object" and choose type "music genre".
-					</div>
-					<div  id=help_connection class=help style='margin-top:11px;margin-bottom:-2px/*display:flex;flex-direction:column;justify-content:center'>
-						<b style='float:left;padding-right:10px'>Nice! Now:</b><div style='overflow:hidden'>You already have a plenty of objects. Make <span style='color:#000'>connections</span> between them. <div style='height:3px'></div>For example <span style='color:#000'>connect</span> a "song" with a "music genre". So: <div style='height:5px'></div>1. Hover the mouse on a first object and press on three dots near it to call the menu. <div style='height:3px'></div>2. Choose "Put in the buffer" in the menu.</div>
-					</div>
-					<div id=help_connection2 class=help style='margin-top:11px;margin-bottom:-2px'>
-						<b style='float:left;padding-right:7px'>The last step:</b><div style='overflow:hidden'>Call the menu on a second object and choose "Connect with object from buffer".</div>
-					</div>
-					<div id=help_open_object class=help style='margin-top:11px;margin-bottom:-2px'>
-						<b style='float:left;padding-right:7px'>Congrats!</b><div style='overflow:hidden'>Now you know how it works. To see all connections of an object - click on it.</div>
-					</div>					
-					<div class="object_table">
-					</div>
-				</div>
-				<div class="body_loading">
-					<div></div>
-					<img src="/img/loading.gif">
-				</div>
-			</div>
-			<div id="page_catalog_object" class="page">
-				<div class="body_head">
-					My catalog - Object
-				</div>
-				<div class="body_menu">
-					<a class='_back _back_back'>← back</a><a class='_back _back_up'>← up</a><a class='_back_history'>back</a><!--
-					--><a class=_select>
-						select objects
-					</a>
-				</div>
-				<div class="body_body">
-					<div id=trees>
-					</div>
-				</div>
-				<div class="body_loading">
-					<div></div>
-					<img src="/img/loading.gif">
-				</div>
-			</div>		
-
-			<div id="page_sql" class="page">
-				<div class="_fix_on_scroll">
-				<div class="body_head">
-					My catalog - SQL
-				</div>				
-				<div class="body_menu">
-					<a class='_back _back_back'>← back</a><!--
-					--><a class=''>documentation</a>
-				</div>
-				</div>
-				<div class="body_body">					
-					<div class="__window_width _fix_on_scroll">
-					<div class="__comments_padding">
-					<div class="_request">
-						SQL request:
-						<div class="sql_editor" contenteditable=true></div>
-						<button class="_execute">
-							Execute
-						</button>
-					</div>
-					</div>
-					</div>
-					<div class="_result">
-					</div>
-				</div>
-				<div class="body_loading">
-					<div></div>
-					<img src="/img/loading.gif">
-				</div>
-			</div>					
-			
-			<div id=comments_cont><table cellpadding=0 cellspacing=0><tr><td id=comments_cont_padding></td></tr><tr><td id=comments_cont_><div id=comments>
-			
-				<!-- LIKES -->
-					<div id=likes>
-										
-						<div class="like" id="tweeter_like">
-							<div id="widget">
-								<div class="btn-o" data-scribe="component:button" style="width: 61px;"><a onclick='window.open("https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fabscat.org%2Fcat48&amp;ref_src=twsrc%5Etfw&amp;text=Cat%2048%20%7C%20Abstract%20Catalog&amp;tw_p=tweetbutton&amp;url=http%3A%2F%2Fabscat.org%2Fcat48", "_blank", "width=600,height=400")' class="btn" id="b"><i></i><span class="label" id="l">Tweet</span></a></div>
-							</div>	
-						</div>
-
-						<div class=like>
-						
-							<a id="telegram_like" class="telegram-share" href="javascript:window.open('https://t.me/share/url?url='+encodeURIComponent(window.location.href), '_blank', 'width=600,height=400')">
-							  <i></i>
-							  <span>Telegram</span>
-							</a>
-							
-						</div>
-												
-						<div class="like" id="facebook_like" onclick='window.open("https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fabscat.org%2Fcat48", "_blank", "width=600,height=400")'>
-						</div>
-						
-						<div class="like" id="google_plus_like" onclick='window.open("https://plus.google.com/share?url=http%3A%2F%2Fabscat.org%2Fcat48", "_blank", "width=600,height=400")'>
-						</div>
-
-						<div  class="like" id="vk_like" onclick='window.open("https://vk.com/share.php?url=http%3A%2F%2Fabscat.org%2Fcat48", "_blank", "width=600,height=400")'>
-						</div>
-					</div>
-					
-				<!-- //LIKES -->		
-			
-				<!-- COMMENTS -->				
-
-					<a id=comments_show  onclick='comments_.hide(false)'>comments</a>
-				
-					<div id=commentsHeader style="line-height:20px;clear:left;displ-ay:none;padding: 0px 0px 5px 0;margin-bottom: 3px;margin-right:8px;margin-top: 0px;overflow: hidden;font-weight: bold;-color: #222;"> 
-						<a id=comments_hide onclick='comments_.hide(true)' style="float:right;color:#22f;font-weight: normal;-padding-right: 5px;">hide</a>
-						Comments						
-					</div>
-
-					<div id=commentsComments><noindex>
-					
-						<div id=comments_chat_header onclick="comments_.chat.hide()">
-							<span>
-								Стена
-							</span>
-						</div>
-						
-						<div class=comments_chat_settings_option id=comments_chat_settings_show_all_in_common>
-							<input type="checkbox" onchange="comments_.chat.settings.showAllInCommon($(this).attr('checked'))">
-							отображать сообщения всех стен в общем чате
-						</div>
-					
-						<div id=commentsAdd>
-							<div class=commentsAva>
-								<img src="/img/noava.gif" width="50" height="50">
-							</div>
-							<div class=commentsRight>
-								<div class=commentsTextarea>
-									<textarea></textarea>
-								</div>
-								<div id=comments_chat_post_to>
-									<span onclick="comments_.chat.show(comments_.chatIdPostTo, comments_.chatName)">
-										отправить на стену 
-									</span>
-									<div onclick="comments_.chat.hidePostTo()"></div>
-								</div>
-								<div class=commentsAddButton>
-									<button onclick="comments_.post();">
-										Send
-									</button>
-									
-								</div>
-							</div>
-						</div>
-						<div id=commentsList>
-							<!-- -->
-						</div>
-					</noindex></div>
-				<!-- //COMMENTS -->
-			</div></td></td></table></div>
-			
-			<div id=players>
-			
-				<div id=player>
-					<div id=player_head>
-						<a class="_action_hide">hide</a>											
-						<a class="_action_lock"></a>
-						<div>
-							<div class=_head_title>
-								The Cancel - Love is
-							</div>
-						</div>						
-					</div>
-					<div id="vk">
-						<div class=_head>
-							<div class=_head_title>vk</div> <!--
-							--><a class="_action_stop">stop</a><a class="_action_play" title="play in vk">play in vk</a><a class="_action_open_vk">vk window</a>
-						</div>					
-					</div>
-					
-					<div id="youtube_" class="_hided">
-						<div class=_head>
-							<div class=_head_title>youtube:&nbsp;</div><!--
-							--><a class="_action_close">disable</a><a class="_action_show">video</a><a class="_action_hide">hide</a><!-- <a class="_action_stop">stop</a> -->
-							<div class=_select_cont><select><option>Mage - The time Is Always Running Out</option></select></div>
-						</div>
-						<div class=_video>					
-							<div class="_hint_video _hided_first"><!-- hover mouse to control --></div>
-							<div id=youtube_iframe_cont><iframe id=youtube_iframe frameborder=0 src=''></iframe></div>
-							<div class="_hint _hided_first"><!-- hover mouse to control --></div>
-						</div>
-					</div>
-				</div>							
-				
-				<div id=player_bar>
-					<a class="_action_close">close</a>
-					<a class="_action_open">open</a>											
-					<a class="_action_stop">stop</a>											
-					<span>The Cancel - Love is</span>
-				</div>											
-				
-			</div></div>
-			
-			
-			
-			<div id=panel_bars_left>
-				<div id="save">
-				</div>
-				<div id="select">
-					<span class="_head">selection:</span><a>actions</a><a>select all</a><a>select none</a><a>select interval</a><a onclick="select.close()">close</a>
-				</div>
-				<div id="buffer">
-					<span class="_head">buffer:</span><span class="_params"><span>id=<span class="_id_value"></span>,</span><span>text="<span class="_text_value"></span>",</span><span>type="<span class="_type_value"></span>"</span></span><span class="_clear">clear</span>
-				</div>
-			</div>
-			
-			<div id="menu">				
-			</div>
-
-			<div id="toast">
-				<div id="toast_text"></div>
-			</div>
-			
-			<div id="window_container">
-				<div id=window_alert class=window>
-					<div class=_head>
-						Message
-					</div>
-					<div class=_body>					
-						<div class="_form _form_last">
-							<div class=_head>
-														
-							</div>
-						</div>
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>
-				<div id=window_object_new class=window>
-					<div class=_head>
-						Create a new object
-					</div>
-					<div class=_body>						
-						<div class="_form _form_last">
-							<div class=_head>
-								Object
-							</div>
-							<div class=_body>
-								<div class=_element>
-									<div class=_head>
-										Text:						
-									</div>
-									<div class=_body>
-										<textarea name=object_text type=text placeholder="Ms. Smith"></textarea>
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Type:						
-									</div>									
-									<!-- <div class=_body>
-										<input type=radio name=type_special_is><select style='display:inline'><option>song</option><option>music genre</option></select>
-									</div>					-->													 
-									<!-- <div class=_body>
-										<input type=radio name=type_special_is>song (music track)<input type=radio name=type_special_is>music genre<!-- <input type=radio name=type_special_is>artist<input type=radio name=type_special_is>album -->
-									<!-- </div> -->
-									
-									<!--<div class=_body style='margin-top:5px'>
-										<input type=radio checked=checked name=type_special_is>song<input type=radio name=type_special_is>genre<input type=radio name=type_special_is>other: <input style='width:121px' name=object_type type=text placeholder="person">
-									</div>-->
-									
-									<!--<div class=_body>
-										<input type=radio checked=checked name=type_special_is>song (music composition)<!--<input type=radio name=type_special_is>genre<!-- <input type=radio name=type_special_is>artist--><!--<input type=radio name=type_special_is>other: <input style='width:121px' name=object_type type=text placeholder="person"><!-- <input type=radio name=type_special_is>album-->
-									<!--</div>-->
-									<!--<div class=_body style='margin-top:7px'>
-										<input type=radio name=type_special_is>other: <input name=object_type type=text placeholder="person"> 
-									</div>-->
-									
-									 <!--<div class=_body style='margin-top:8px'>
-										<input type=radio name=type_special_is>music genre
-									</div>-->
-									<div class=_body>
-										<!-- <input type=radio name=type_special_is>other:--> <input name=object_type type=text placeholder="person">
-									</div>
-									<!-- <div class=_head>
-										Is it a special type:
-									</div>									
-									<div class=_body>
-										<input type=radio name=type_special_is checked=1>no <input type=radio name=type_special_is>song <input type=radio name=type_special_is>music genre
-									</div>	-->								
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Color:						
-									</div>
-									<div class=_body>
-										<input name=object_color type=text placeholder="#XXXXXX">									
-									</div>
-								</div>
-							</div>
-						</div>						
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>
-				<div id="window_object_connect_with_new_object" class="window">
-					<div class="_head">
-						Connect with a new object
-					</div>
-					<div class="_body">
-						<div class="_form">
-							<div class="_head">
-								Connection
-							</div>
-							<div class="_body">							
-								<div class="_element">
-									<div class="_head">
-										Text:
-									</div>
-									<div class=_body>
-										<input name=connection_text type=text placeholder="mother">									
-									</div>
-								</div>
-						
-								<div class="_element">
-									<div class=_head>
-										Text for the opposite direction:
-									</div>
-									<div class=_body>
-										<input name=connection_opposite_text type=text placeholder="child">									
-									</div>
-								</div>									
-							</div>
-						</div>
-						<div class="_form _form_last">
-							<div class=_head>
-								Object
-							</div>
-							<div class=_body>
-								<div class=_element>
-									<div class=_head>
-										Text:
-									</div>
-									<div class=_body>
-										<textarea name=object_text type=text placeholder="Ms. Smith"></textarea>
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Type:
-									</div>
-									<!-- <div class=_body>
-										<input type=radio checked=checked name=type_special_is>song<input type=radio name=type_special_is>music genre<!-- <input type=radio name=type_special_is>artist<!-- other: <input style='width:121px' name=object_type type=text placeholder="person"> --><!-- <input type=radio name=type_special_is>album-->
-									<!--</div>-->
-									<div class=_body style-='margin-top:7px'>
-										<!-- <input type=radio name=type_special_is>other: --><input style='width:121px' name=object_type type=text placeholder="person"> 
-									</div>
-									<!-- <div class=_body style='margin-top:8px'>
-										<input type=radio name=type_special_is>music genre
-									</div>
-									<div class=_body>
-										 <input type=radio name=type_special_is>other: <input name=object_type type=text placeholder="person">
-									</div>-->
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Color:
-									</div>
-									<div class=_body>
-										<input name=object_color type=text placeholder="#XXXXXX">									
-									</div>
-								</div>
-							</div>
-						</div>						
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>
-				<div id=window_object_connect_with_object_from_buffer class=window>
-					<div class=_head>
-						Connect with an object from the the buffer
-					</div>
-					<div class="_body">
-						<div class="_form">
-							<div class="_head">
-								Connection
-							</div>
-							<div class="_body">
-								<div class="_element">
-									<!-- <div class="_head">
-										Subgenre connection:
-									</div> -->
-								<!--	<div class=_body style='margin-top:10px'>
-										<input type=radio name=connection_special>Subgenre
-									</div>
-								</div>
-								<div class="_element">
-									<div class=_body  style='margin-top:10px'>
-										<input type=radio name=connection_special>Parent genre
-									</div>
-								</div>
-								<div class="_element">
-									<div class=_body style='margin-top:10px'>
-										<input type=radio name=connection_special>Other connection type
-									</div>-->
-								
-
-									<div class="_head">
-										Text:
-									</div>
-									<div class=_body>
-										<input name=connection_text type=text placeholder="mother">									
-									</div>
-
-
-									<div class=_head>
-										Text for the opposite direction:
-									</div>
-									<div class=_body>
-										<input name=connection_opposite_text type=text placeholder="child">									
-									</div>
-								</div>								
-							</div>
-						</div>
-						<div class="_form _form_last">
-							<div class=_head>
-								Object
-							</div>
-							<div class=_body>
-								<div class=_element>
-									<div class=_head>
-										Id:						
-									</div>
-									<div class=_body>
-										<input disabled name=object_id type=text placeholder="Ms. Smith"></textarea>
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Text:
-									</div>
-									<div class=_body>
-										<input disabled name=object_text type=text placeholder="person">									
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Type:
-									</div>
-									<div class=_body>
-										<input disabled name=object_type type=text placeholder="#XXXXXX">									
-									</div>
-								</div>
-							</div>
-						</div>						
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>
-				<div id=window_object_edit class=window>
-					<div class=_head>
-						Edit an object
-					</div>
-					<div class=_body>						
-						<div class="_form _form_last">
-							<div class=_head>
-								Object
-							</div>
-							<div class=_body>
-								<div class=_element>
-									<div class=_head>
-										Text:
-									</div>
-									<div class=_body>
-										<textarea name=object_text type=text placeholder="Ms. Smith"></textarea>
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Type:
-									</div>
-									<div class=_body>
-										<input name=object_type type=text placeholder="person">									
-									</div>
-									<!--<div class=_head>
-										Is it a special type:
-									</div>									
-									<div class=_body>
-									<input type=radio name=type_special_is checked>no <input type=radio name=type_special_is>song <input type=radio name=type_special_is>music genre									
-										<div class=_help>
-											song - you will be able to play it
-										</div>
-									</div>-->
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Color:
-									</div>
-									<div class=_body>
-										<input name=object_color type=text placeholder="#XXXXXX">									
-									</div>
-								</div>
-							</div>
-						</div>						
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>
-				<div id=window_object_remove class=window>
-					<div class=_head>
-						Remove an object
-					</div>
-					<div class=_body>					
-						<div class="_form _form_last">
-							<div class=_head>
-								Remove the object
-							</div>
-						</div>
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>
-				<div id=window_connection_edit class=window>
-					<div class=_head>
-						Edit a connection
-					</div>
-					<div class=_body>						
-						<div class="_form _form_last">
-							<div class=_head>
-								Connection
-							</div>
-							<div class=_body>
-								<div class=_element>
-									<div class=_head>
-										Text:	
-									</div>
-									<div class=_body>
-										<textarea name=text type=text placeholder="mother"></textarea>
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Text for the opposite direction:	
-									</div>
-									<div class=_body>
-										<input name=opposite_text type=text placeholder="child">									
-									</div>
-								</div>								
-							</div>
-						</div>						
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>	
-				<div id=window_connection_remove class=window>
-					<div class=_head>
-						Remove a connection
-					</div>
-					<div class=_body>					
-						<div class="_form _form_last">
-							<div class=_head>
-								Remove the connection
-							</div>
-						</div>
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>	
-				<div id=window_type_edit class=window>
-					<div class=_head>
-						Edit type
-					</div>
-					<div class=_body>						
-						<div class="_form _form_last">
-							<div class=_head>
-								Type
-							</div>
-							<div class=_body>
-								<div class=_element>
-									<div class=_head>
-										Text:	
-									</div>
-									<div class=_body>
-										<input name=text type=text placeholder="">
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Color:	
-									</div>
-									<div class=_body>
-										<input name=color type=text placeholder="">									
-									</div>
-								</div>								
-							</div>
-						</div>						
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>	
-				<div id="window_import" style='display:none;width:auto' class="window">
-					<div class="_head">
-						Import/Export
-					</div>
-					<div class="_body">						
-						<div class="_form">
-							<div class="_head">
-								Import
-							</div>
-							<div class="_body">							
-								<div class="_element">
-									<div class="_head">
-										Text:
-									</div>
-									<div class=_body>
-										<input name=connection_text type=text placeholder="mother">									
-									</div>
-								</div>
-						
-								<div class="_element">
-									<div class=_head>
-										Text for the opposite direction:
-									</div>
-									<div class=_body>
-										<input name=connection_opposite_text type=text placeholder="child">									
-									</div>
-								</div>									
-							</div>
-						</div>
-						<div class="_form _form_last">
-							<div class=_head>
-								Import from hard drive
-							</div>
-							<div class=_body>
-								<div class=_element>
-									<div class=_head style='width:300px;'>
-										You cam import your music catalog from the computer hard drive (only Windows), incliding all directory structure and music files.
-									</div>
-									<div class=_body>
-										<textarea name=object_text type=text placeholder="Ms. Smith"></textarea>
-									</div>
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Type:
-									</div>
-									<div class=_body>
-										<input type=radio checked=checked name=type_special_is>song<input type=radio name=type_special_is>music genre<!-- <input type=radio name=type_special_is>artist<!-- other: <input style='width:121px' name=object_type type=text placeholder="person"> --><!-- <input type=radio name=type_special_is>album-->
-									</div>
-									<div class=_body style='margin-top:7px'>
-										<input type=radio name=type_special_is>other: <input style='width:121px' name=object_type type=text placeholder="person"> 
-									</div>
-									<!-- <div class=_body style='margin-top:8px'>
-										<input type=radio name=type_special_is>music genre
-									</div>
-									<div class=_body>
-										 <input type=radio name=type_special_is>other: <input name=object_type type=text placeholder="person">
-									</div>-->
-								</div>
-								<div class=_element>
-									<div class=_head>
-										Color:
-									</div>
-									<div class=_body>
-										<input name=object_color type=text placeholder="#XXXXXX">									
-									</div>
-								</div>
-							</div>
-						</div>	
-						<div class="_form">
-							<div class="_head">
-								Export (Backup)
-							</div>
-							<div class="_body">							
-								<div class="_element">
-									<div class="_head">
-										Text:
-									</div>
-									<div class=_body>
-										<input name=connection_text type=text placeholder="mother">									
-									</div>
-								</div>
-						
-								<div class="_element">
-									<div class=_head>
-										Text for the opposite direction:
-									</div>
-									<div class=_body>
-										<input name=connection_opposite_text type=text placeholder="child">									
-									</div>
-								</div>									
-							</div>
-						</div>						
-						<div class=_actions>
-							<button class=_button_ok>OK</button><button class=_button_cancel>Cancel</button>
-						</div>
-					</div>
-				</div>				
-			</div>			
-		</div>
-		<script src="/js/jquery_with_cookie.js">
-		</script>
-		<script>		
-			var user=<?php echo $user ? json_encode($user) : '{id: 0}'; ?>;		
-		</script>
-		<script src='/js/main.js?3<?php echo ! $cache ? rand(1,1000000) : ''; echo '&lang='.$lang ?>'>
-		</script>
-			
-		<?php
+		if(catId==0)
+		{
+			var data=false;
+			data=JSON.parse($.cookie('data_guest') || '{"objects": {}, "connections": {}}');			
+			data=new Data(catId, data);
+			callback(data);
+			//callback(JSON.parse(localStorage.getItem('data_guest') || '{"objects": {}, "connections": {}}'));
+			dataExt.cache.set(catId, data);
+			return;
+		}
+		else
+		{
+			$.get('/ajax.php', {type: 'cat', cat_id: catId}, function(data)
+			{			
+				console.log(data);
+				data=new Data(catId, data);
+				dataExt.cache.set(catId, data);								
+				callback(data);
+			}, 'json');
+		}		
+	},
+	set: function(catId, data, callback)
+	{
+		dataExt.cache.set(catId, data);
 		
-			if(! $user)
+		if(catId==0)
+		{
+			$.cookie('data_guest', JSON.stringify(data.ext), {expires: 1000});
+			//localStorage.setItem('data_guest', JSON.stringify(data));
+			callback('OK');
+		}
+		else
+		{
+			$.post('/ajax.php?type=cat_save', {cat_id: catId, data: JSON.stringify(data.ext)}, function(res_)
 			{
-				
-		?>
-			<script>
-				$(function()
+				if(res_=='OK')
 				{
-					$.getScript('//ulogin.ru/js/ulogin.js', function()
-					{
-						$('body').append('<div id="ulogin_receiver_container" style="margin: 0px; padding: 0px; outline: none; border: none; border-radius: 0px; cursor: default; float: none; position: relative; display: none; width: 0px; height: 0px; left: 0px; top: 0px; box-sizing: content-box;"><iframe name="easyXDM_default2089_provider" id="easyXDM_default2089_provider" frameborder="0" src="https://ulogin.ru/stats.html?r=59930&amp;type=small&amp;xdm_e=http%3A%2F%2Fabscat.org<?php echo urlencode($_SERVER['REQUEST_URI']); ?>&amp;xdm_c=default2089&amp;xdm_p=1" style="margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; position: absolute; left: 0px; top: 0px; overflow: hidden; width: 100%; height: 100%;"></iframe></div><div class="ulogin-dropdown" id="ul_1488011894939" style="margin: 0px; padding: 0px; outline: none; border: 5px solid rgb(102, 102, 102); border-radius: 4px; cursor: default; float: none; position: absolute; display: none; width: 128px; height: 310px; left: 0px; top: 0px; box-sizing: content-box; z-index: 9999; box-shadow: rgba(0, 0, 0, 0.137255) 0px 2px 2px 0px, rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.117647) 0px 1px 5px 0px;"><iframe name="easyXDM_default2090_provider" id="easyXDM_default2090_provider" frameborder="0" src="https://ulogin.ru/version/2.0/html/drop.html?id=0&amp;redirect_uri=http%3A%2F%2Fabscat.org<?php echo urlencode($_SERVER['REQUEST_URI']); ?>&amp;callback=&amp;providers=facebook,twitter,google,yandex,livejournal,openid,flickr,lastfm,linkedin,liveid,soundcloud,steam,uid,webmoney,youtube,foursquare,tumblr,vimeo,instagram,wargaming&amp;fields=first_name,last_name&amp;force_fields=&amp;optional=&amp;othprov=vkontakte,odnoklassniki,mailru,facebook&amp;protocol=http&amp;host=abscat.org<?php echo urlencode($_SERVER['REQUEST_URI']); ?>&amp;lang=ru&amp;verify=&amp;sort=relevant&amp;m=0&amp;icons_32=&amp;icons_16=&amp;theme=classic&amp;client=&amp;page=http%3A%2F%2Fabscat.org%2Findex_cp3.1_markers.php&amp;version=1&amp;xdm_e=http%3A%2F%2Fabscat.org&amp;xdm_c=default2090&amp;xdm_p=1" style="margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; position: relative; left: 0px; top: 0px; overflow: hidden; width: 128px; height: 310px;"></iframe><div style="margin: 0px; padding: 0px; outline: none; border: 5px solid rgb(102, 102, 102); border-radius: 0px; cursor: default; float: none; position: absolute; display: inherit; width: 41px; height: 13px; left: initial; top: 100%; box-sizing: content-box; background: rgb(0, 0, 0); right: -5px; text-align: center;"><a href="" target="_blank" style="margin: 0px; padding: 0px; outline: none; border: none; border-radius: 0px; cursor: default; float: none; position: relative; display: inherit; width: 41px; height: 13px; left: 0px; top: 0px; box-sizing: content-box; background: url(&quot;https://ulogin.ru/img/text.png&quot;) no-repeat;"></a></div></div>');
-					});
-				});							
-			</script>
+					callback('OK');
+				}
+				else
+				{
+					callback('ERROR');
+				}							
+			}, 'text');
+		}
+	}
+}
+			
+var url=
+{				
+	langPrefix: '',
+	
+	set: function(urlData, state)
+	{
+		history.pushState(state, document.title=url.title(urlData), url.gen(urlData));
 		
-		<?php
+	},
+	
+	gen: function(urlData)
+	{
+		if(urlData.page=='cats')
+		{
+			var res='/cats';
+		}
+		else if(urlData.page=='cat')
+		{
+			res='/cat'+urlData.catId;
+		}
+		else if(urlData.page=='catObj')
+		{
+			res='/cat'+urlData.catId+'/obj'+urlData.objId;
+		}
+		else if(urlData.page=='about')
+		{
+			res='/about';
+		}
+		else if(urlData.page=='sql')
+		{
+			res='/cat'+urlData.catId+'/sql';
+		}
 		
+		return url.langPrefix+res;
+	},
+	
+	title: function(urlData)
+	{
+		if(urlData.page=='cats')
+		{
+			return 'All Catalogs | Abstract Catalog';
+		}
+		else if(urlData.page=='cat')
+		{
+			return 'Cat '+ +urlData.catId+' | Abstract Catalog';
+		}
+		else if(urlData.page=='catObj')
+		{
+			return 'Cat '+ +urlData.catId+' - Obj '+ +urlData.objId+' | Abstract Catalog';
+		}
+		else if(urlData.page=='about')
+		{
+			return 'Abstract Catalog';
+		}
+		else if(urlData.page=='sql')
+		{
+			return 'Cat '+ +urlData.catId+' - SQL | Abstract Catalog';
+		}
+	},
+	
+	loadByUrl: function(url_)
+	{
+		if(url_.indexOf('/ru/')==0)
+		{
+			url.langPrefix='/ru';
+			url_=url_.substr(3);
+		}
+		
+		var m=url_.substr(1).split('/');
+		var mm=[];
+		for(var i in m)
+		{
+			var mmm=m[i].match(/([^\d]+)([\d]*)/) || [];
+			mm.push([mmm[1], mmm[2]]);
+		}
+		
+		if(! mm[0] || ! mm[0][0])
+		{							
+			pages.about.go();
+			return;
+		}
+		else if(mm[0][0]=='about')
+		{
+			var urlData={page: 'about'};
+			pages.about.open();
+		}
+		else if(mm[0][0]=='cats')
+		{
+			var urlData={page: 'cats'};
+			pages.cats.open();
+		}
+		else if(mm[0][0]=='cat')
+		{
+			if(mm[1] && mm[1][0]=='obj')
+			{
+				var urlData={page: 'catObj', catId: +mm[0][1], objId: +mm[1][1]};
+			}
+			else if(mm[1] && mm[1][0]=='sql')
+			{
+				var urlData={page: 'sql', catId: +mm[0][1]};
+				pages.cats.open();
+			}
+			else
+			{
+				var urlData={page: 'cat', catId: +mm[0][1]};
 			}
 			
-		?>
-	</div></body>
-</html>
+			if(urlData.catId==0 && user.id)
+			{
+				pages.cat.go(user.id);
+				return;
+			}			
+
+			if(urlData.page=='cat')
+			{						
+				pages.cat.open(urlData.catId);
+			}
+			else if(urlData.page=='catObj')
+			{						
+				pages.catObj.open(urlData.catId, urlData.objId);
+			}
+			else if(urlData.page=='sql')
+			{
+				pages.sql.open(urlData.catId);
+			}
+		}
+		if(urlData) document.title=this.title(urlData);
+	}					
+};
+
+window.onpopstate=function(event)
+{
+	url.loadByUrl(window.location.pathname);
+};
+
+function fixOnCommentsRight()
+{
+	//$('#players').css('right', scrollBarWidth+'px');
+	//$('#head').css('margin-left', '-'+scrollBarWidth+'px');
+	//$('#head > div').css('padding-left', 10+scrollBarWidth+'px');
+}
+
+$(function()
+{
+	$('#initial_loading').hide();
+	
+	window.scrollBarWidth=$("#comments").width()-$("#commentsComments").width();
+	fixOnCommentsRight();
+	
+	menu.init();
+	buffer.init();
+	$('#logout').click(function()
+	{
+		document.cookie='user_auth=';
+		window.location='?logout=1';
+	});
+	
+	$('#window_container ._button_cancel').click(windows.cancel);									
+	
+	url.loadByUrl(window.location.pathname);		
+	
+	$('#head_menu ._about').click(function()
+	{
+		pages.about.go();
+	});
+	
+	$('#head_menu ._cats').click(function()
+	{
+		pages.cats.go();
+	});
+	
+	$('#head_menu ._my_cat').click(function()
+	{
+		pages.cat.go(user.id);
+	});
+});	
+
+var select=
+{
+	open: function()
+	{
+		//cursorWait(true, '.body_menu ._select', function()
+		//{
+			$('body').addClass('select');	
+			//cursorWait(false);
+			setTimeout(function()
+			{
+				$('#select').css({'display': 'inline-block'})
+				.animate({"background-color": 'rgba(200, 200, 200, 0.84)'}, 300, function()
+				{
+					$(this).animate({"background-color": 'rgba(220, 220, 220, 0.94)'}, 300);					
+				});
+			});
+		//});
+	},
+	
+	close: function()
+	{
+		$('body').removeClass('select');
+		$('#select').hide();
+	}
+}
+$(function()
+{
+	$('.body_menu ._select').click(()=>{select.open();});
+});
+
+var help=
+{	
+	loginHided: false,
+	show: function(data, catId)
+	{
+		$('.help').hide();
+		$('#page_catalog').removeClass('_help_hide_table');	
+		if(catId!=user.id) return;		
+		var objectLength=lib.objectLength(data.objects);
+		if(objectLength==0)
+		{
+			$('#page_catalog').addClass('_help_hide_table');	
+			$('#help_create').css('display', 'inline-block');		
+		}
+		else if(objectLength==1)
+		{
+			$('#help_create_second').css('display', 'inline-block');
+		}
+		else if(lib.objectLength(data.connections)==0)
+		{
+			if(! buffer.get())
+			{
+				$('#help_connection').css('display', 'inline-block');			
+			}
+			else
+			{
+				$('#help_connection2').css('display', 'inline-block');
+			}
+		}
+		else if(! lib.paramCookie('help_open_object_hide'))
+		{
+			$('#help_open_object').css('display', 'inline-block');
+			var f=false;
+			$('.table_type_object a').click(f=function()
+			{
+				lib.paramCookie('help_open_object_hide', 1);
+				$('.table_type_object a').unbind('click', f);
+			})
+		}
+		else if(catId==0 && ! this.loginHided)
+		{
+			$('#help_login').css('display', 'inline-block');
+		}
+		else
+		{
+			help={show: function(){}, hide: function(){}};
+		}		
+	},
+	hide: function()
+	{
+		$('.help').hide();
+	},
+	loginHide: function()
+	{
+		$('#help_login').hide();
+		this.loginHided=true;
+	}
+}
+
+var toast=
+{
+	timeout: false,
+	show: function(text)
+	{
+		$('#toast_text').text(text);
+		$('#toast').css({opacity: 1});
+		setTimeout(function(){$('#toast').hide().fadeIn(300);}, 0);
+		if(this.timeout)
+		{
+			clearTimeout(this.timeout);
+			clearTimeout(this.timeout2);
+		}
+		this.timeout2=setTimeout(function(){/*$('#toast').animate({opacity: '0.83'}, 800);*/}, 2400);
+		this.timeout=setTimeout(function()
+		{			
+			$('#toast').fadeOut();
+		}, /*4150*/3700);
+	}
+}
+
+SqlEditor=function(node)
+{
+	var node_=node.get(0);
+	node.keydown(function(e)
+	{
+		if(e.keyCode==9)
+		{
+			replace('tab');			
+			e.preventDefault();
+			e.stopPropagation();
+		}
+		/*else if(e.keyCode==13)
+		{
+			replace('enter');			
+			e.preventDefault();
+			e.stopPropagation();
+		}*/
+	});
+	
+	node.keydown(function(e)
+	{
+		//if((e.key.length==1 /*|| e.keyCode==13*/) && ! e.altKey && ! e.ctrlKey) setTimeout(function(){replace();}, 0);
+			//replace();
+	});
+	
+	this.getText=function()
+	{
+		var text=node_.innerText;
+		text=text.replace(/⋂/g, '^');
+		text=text.replace(/∈/g, ' e ');
+		text=text.replace(/≡/g, '==');
+		text=text.replace(/⋃/g, ' u ');
+		
+		return text;
+	};	
+	this.setText=function()
+	{
+		
+	};
+	var i;
+	var replace=function(insertion)
+	{
+		var replace_=function(text, start)
+		{			
+		dddd=text+'';
+
+			text=text.replace(/==>/g, '⟹');//'⟾');
+			text=text.replace(/=>/g, '⟶');			
+		//
+			text=text.replace(/(\d+\.{0,1}\d+(?=[^\w\'])|(\||!|\*|\%|\?|\^|⋂|\$|∈|\/|alias|as|==|limit all|only|filter|u|offset|apply|if|limit|union|sort|order by|remove|distinct|connect|connection|having|select|not in|in|where|and|or|with|new|not|this)(?=[^\w])|⋃|⟶|⟾|⟹|\[|\]|:| - |--[^\s]+|\se\s|\s\!e\s|\.\.|\.|\,|\(|\)|≡|=|∉|\<|\>)/g, function(m)
+			{
+				console.log(m);
+				var n=m.substr(0);
+				if(n=='%') return '<span class="_bracket">%<!--∇--></span>';
+				if(n.match(/\s!e\s/)) return '<span class="_bracket"> ∉ </span>';
+				if(n=='?') return '<span class="_bracket">?</span>';
+				if(n=='^') return '<span class="_bracket">⋂</span>';
+				if(n=='$') return '<span class="_bracket">$</span>';
+				if(n=='[') return '<span class="_brackket" style="color:#888;font-weight:normal;margin-left:2px">[</span>';
+				if(n==']') return '<span class="_brlacket" style="color:#888;font-weight:normal;">]</span>';
+				if(n=='==') return '<span class="_bracket">≡</span>';
+				if(n=='*') return '<span class="_bracket">*</span>';
+				if(n.match(/--[^\s]+/)) return '<span style="color:#336a33">'+n+'</span>';//6a6
+				if(n=='u') return '<span class="_bracket">⋃</span>';				
+				if(n.match(/\se\s/)) return '<span class="_bracket"> ∈ </span>';				
+				if(n.match(/\s\!e\s/)) return '<span class="_bracket"> ∉ </span>';				
+				if(n.match(/\s\-\s/)) return '<span class="_bracket"> - </span>';				
+				if(['offset','limit all','only', 'sort','alias','not in','order by','$', '*', '%','?', 'limit','if','filter','apply','select','connect','connection', 'remove', 'distinct', 'union','where','connection','and','in','as','or', 'new', 'this', 'with', 'not', 'having'].indexOf(m.substr(0))!=-1) return '<span class="_bold">'+m.substr(0)+'</span>';
+				
+				if(m=='.') return '<span style="margin-right:1px" class="_bracket _point">.</span>';
+				
+				if(['(',')'].indexOf(m[0])!=-1) return '<span class="_bracket _bracket_ _point">'+m+'</span>';
+				if(['!', '|','⋂', '⋃', '≡','∈','∉','..','⋃','[',']','/', '=', ',', ':','{','}','⟶','⟾','⟹'].indexOf(m)!=-1) return '<span class="_bracket _point">'+m+'</span>';
+				
+				if(m[0]=='<') return '<span class="_bracket _point">&lt;</span>';
+				if(m[0]=='>') return '<span class="_bracket _point">&gt;</span>';
+				
+				return '<span class="_decimal">'+m+'</span>';
+			});
+			text=text.replace(/\{\}/g, '<span style="color:#000080;padding-left:1px;">{}</span>');
+			text=text.replace(/\'.*?\'/g, function(m)
+			{
+				return '<span class="_literal">'+m+'</span>';
+				
+			})
+			
+			text=text.replace(/article_params/g, function(m)
+			{
+				return '<span  class="_function">'+m+'</span>';
+				
+			})
+			
+			text=text.replace(/rec(?=[\W])/g, function(m)
+			{
+				return '<span  class="_function">'+m+'</span>';
+				
+			})
+			text=text.replace(/recursion(?=[\W])/g, function(m)
+			{
+				return '<span  class="_function">'+m+'</span>';
+				
+			})
+			
+			/*text=text.replace(/\W\d+\.{0,1}\d+\W/g, function(m)
+			{
+				
+				
+			})*/
+			
+			text=text.replace(/\n$/g, '');		
+			
+			text=text.replace(/(^\n)/g, '<br></div><div>');
+			text=text.replace(/(\n(?=(\n|$)))/g, '</div><div><br>');			
+			//if(! start) text=text.replace(/(\n(?=$))/g, '</div><div><br>');			
+			text=text.replace(/\n/g, '</div><div>');
+			text=text.replace(/\t/g, '<span style="white-space:pre" id="ttt">	</span>');
+			//text=text.replace(/\t/g, '&nbsp; &nbsp;&nbsp;');
+			//text=text.replace(/_/g, '');
+			
+			/*text=text.replace(/\(/g, '<span style="margin-right:0px" class="_bracket">(</span>');			
+			text=text.replace(/\)/g, '<span style="margin-left:0px" class="_bracket">)</span>');			
+			text=text.replace(/\./g, '<span style="margin-right:2px" class="_bracket _point">.</span>');			
+			text=text.replace(/\,/g, '<span class="_bracket _point">,</span>');			
+			text=text.replace(/where/g, '<span class="_bold">where</span>');			
+			text=text.replace(/select/g, '<span class="_bold">select</span>');			
+			text=text.replace(/and/g, '<span class="_bold">and</span>');			
+			text=text.replace(/or/g, '<span class="_bold">or</span>');	
+			text=text.replace(/\=/g, '<span style="margin-right:0px" class="_bracket">=</span>');		*/
+			
+			
+			return text;
+		}
+		
+		var selection=window.getSelection();
+		
+		/*var m=false;
+		var range=selection.getRangeAt(0);
+		var cont=range.startContainer;	
+		var len=range.startOffset;
+		while(true)
+		{
+			if(cont==node_) break;
+			if(m=cont.previousSibling)
+			{
+				cont=m;
+			}
+			else 
+			{
+				cont=cont.parentElement;
+				if(! cont) break;
+				continue;
+				//if(m=cont.lastChild) cont=m;
+			}
+			
+			
+			if(cont.tagName=='DIV')
+			{
+				if(cont.innerHTML) len++;
+			}
+			else 
+			{
+				m=cont.nodeValue || cont.innerText;
+				len+=m.length;
+			}
+		}
+		console.log(len);*/
+		
+		var text=node_.innerText;
+		text1=text;//.substr(0,len);
+		if(insertion=='tab') text1+='\t';
+		else if(insertion=='enter') text1+='\n';
+		//text2=text.substr(len);
+		text1=replace_(text1, 1);
+		//text2=replace_(text2);
+		if(m=document.getElementById('sql_editor_cursor'+i)) m.remove();
+		console.log(ddd=text);
+		//alert(1);
+		i++;
+		node_.innerHTML='<div>'+text1+/*'<span id="sql_editor_cursor'+i+'">_</span>'+text2+*/'</div>';
+		console.log('<div>'+text1+/*'<span id="sql_editor_cursor'+i+'">_</span>'+text2+*/'</div>');
+				
+		
+		/*range=document.createRange();
+        range.collapse(false);        
+        selection.removeAllRanges();
+        range.setStart(m=document.getElementById('sql_editor_cursor'+i), 1);
+		range.setEnd(m, 1);
+        selection.addRange(range);
+		//m.remove();*/
+	};
+	this.replace=replace;
+}
+
+$(function()
+{
+	//$.getScript('//ulogin.ru/js/ulogin.js');//, scriptULoginOnLoad);
+	$.getScript('/js/jquery.mousewheel.js', scriptMouseWheelOnLoad);
+	$.getScript('https://www.youtube.com/iframe_api');
+	$.getScript('/js/jquery.color.js');
+	//$.getScript('http://vk.com/js/api/share.js?10', scriptVkShareOnLoad);					
+	
+	$(window).resize(resize);
+	var resize=function()
+	{
+		$('.__window_width').css('width', $(window).width())
+	};
+	resize();
+});
