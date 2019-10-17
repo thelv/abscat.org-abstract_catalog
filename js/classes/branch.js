@@ -96,8 +96,9 @@ var Branch=function(data, catId, objectId, connectionId, connectionStraightOrOpp
 						{
 							windows.connectionEdit.open(connection, function(data_)
 							{
+								console.log(data_);
 								data.connectionEdit(connection.id, data_);
-								this_.nodeConnection.text(connectionStraightOrOpposite ? connection.text : connection.oppositeText);								
+								this_.nodeConnectionText.text(connectionStraightOrOpposite ? data_.text : data_.oppositeText);								
 							}); 
 						}
 					},

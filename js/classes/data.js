@@ -143,5 +143,6 @@ window.data=this;
 				delete data.connections[i];
 			}
 		}
-	}		
+		save.save(catId, this);
+	}
 }		

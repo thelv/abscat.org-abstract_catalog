@@ -385,6 +385,11 @@ body.select #select{display:block;}
 		#window_connection_edit ._form:last-child{width:300px}
 		#window_connection_edit textarea{width:286px}
 	#window_connection_remove{width:350px}
+	#window_type_edit{width:227px}
+		#window_type_edit ._form{-width:200px}
+		#window_type_edit input[type=text]{width:186px}
+		#window_type_edit ._form:last-child{width:200px}
+		#window_type_edit textarea{width:286px}
 	
 	.-window input[type=text][name=object_type]{width:100px !important}
 

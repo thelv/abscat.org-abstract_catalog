@@ -296,4 +296,24 @@ windows=
 			};
 		}
 	}),
+	typeEdit: new Window('window_type_edit').extend(function()			
+	{
+		this.open=function(type, data, callback)
+		{															
+			this.node.find('[name=text]').val(type);
+			this.node.find('[name=color]').val(dataGetTypeColor(data, type));
+			console.log(data);
+			this.show();
+			
+			this.ok=function()
+			{							
+				callback(
+				{
+					text: this.node.find('[name=text]').val(),
+					color: this.node.find('[name=color]').val()								
+				});
+				this.close();
+			};
+		}
+	}),
 };

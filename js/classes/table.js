@@ -49,7 +49,29 @@ console.log('start');
 									//toast.show('object created');
 								});													
 							}
+						},
+						{
+							text: 'edit type',
+							action: function()
+							{
+								windows.typeEdit.open(type.type, data, function(type_)
+								{
+									console.log(type_);
+									var color='';
+									for(var i in data.objects)
+									{
+										if(data.objects[i].type==type.type)
+										{
+											data.objects[i].type=type_.text;
+											data.objects[i].color=type_.color;
+										}
+									}
+									save.save(catId, data);
+									filter(true);
+								});								
+							}
 						}
+						
 					]
 				);				
 			};})(type));

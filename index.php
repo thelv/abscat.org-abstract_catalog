@@ -77,6 +77,8 @@
 				</div>
 				<div class="body_body">
 					$@{You can create} <a class="_my_cat_link _link">$@{your own catalog}</a> $@{or discover other people} <a class="_cats_link _link">$@{catalogs}</a>.
+					<br><br>
+					Github page: <a target=_blank class=_link href=https://github.com/thelv/abscat.org-abstract_catalog>https://github.com/thelv/abscat.org-abstract_catalog</a>.
 				</div>				
 			</div>
 			<div id="page_cats" class="page">
@@ -709,6 +711,39 @@
 								$@{Remove the connection}
 							</div>
 						</div>
+						<div class=_actions>
+							<button class=_button_ok>$@{OK}</button><button class=_button_cancel>$@{Cancel}</button>
+						</div>
+					</div>
+				</div>	
+				<div id=window_type_edit class=window>
+					<div class=_head>
+						$@{Edit type}
+					</div>
+					<div class=_body>						
+						<div class="_form _form_last">
+							<div class=_head>
+								$@{Type}
+							</div>
+							<div class=_body>
+								<div class=_element>
+									<div class=_head>
+										$@{Text}:	
+									</div>
+									<div class=_body>
+										<input name=text type=text placeholder="">
+									</div>
+								</div>
+								<div class=_element>
+									<div class=_head>
+										$@{Color}:	
+									</div>
+									<div class=_body>
+										<input name=color type=text placeholder="">									
+									</div>
+								</div>								
+							</div>
+						</div>						
 						<div class=_actions>
 							<button class=_button_ok>$@{OK}</button><button class=_button_cancel>$@{Cancel}</button>
 						</div>
