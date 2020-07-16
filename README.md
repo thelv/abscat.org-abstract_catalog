@@ -1,7 +1,7 @@
 # abscat.org-abstract_catalog
 Abscat.org (abstract catalog) website source code. This is an alternative and more human logic approach to data structuring and sql. It can be used for catalogization of your music library and you can listen your music right from website (youtube and vk services used for music search).
 
-Hello. This project provide the idea of making universal and simplest structure for describing any catalog data. 
+Hello. This project provides the idea of making universal and simplest structure for describing any catalog data. 
 May be your music, may be library books or may be anything else.
 
 The structure we found is very simple and it fits with any standart database data.
