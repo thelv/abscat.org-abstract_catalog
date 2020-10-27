@@ -84,4 +84,4 @@ person: mother e .person.wife
 
 -- will find any person who married on his mother. It takes only objects from left side of "e" symbol, which belongs to object set from the right side of "e" sumbol.
 
-We need to note that .person in this case will have not all persons for each person, who mother we need to check. If we want to take persons undepently from first person selection, we should use figure brackets {} and optionally number inside it. If no numbers provided means that this set of objects will be undependent from any others with same name. Same numbers means same sets. No figure brackets equels to number 0: {0}
+We need to note that .person in this case will have not all persons for each person, who mother we need to check. If we want to take persons undepently from first person selection, we should use figure brackets {} and optionally number inside it. If no numbers provided means that this set of objects will be undependent from any others with same name. Same numbers means same sets. No figure brackets equels to number 0: {0} -- BUT THIS FEATURE NOT WORKING RIGHT NOW
