@@ -70,3 +70,18 @@ person="Bob" (mother, father, brother, syster)
 This is not the same thing with CONCAT (U), because if we write next to the breakets some code, it will be related only to first item in brackets (mother in this example).
 This code will give us only grandmother of Bob from his mother side:
 person="Bob" (mother, father, brother, syster) mother
+
+P.S. Little trick to remove types from all the logic. We can define root object. And say that all objects with type "person" connect with root object through connection "person". With will have no influence on a way we write requests. So there is no difference either define types or define root object and connect objects with it through  corresponding connections.
+
+And yet. Another feature in our language is that you can add dot before any type and parser will count the dot as root object.
+For example: person (mother, .father)
+
+.father will be considered as all objects with type "father", not the father of person. It will be similar with cross join in sql.
+
+This "." synthax could be helpful with another construction we didn't introduce yet. Symbol "e" means belongs. 
+This request: 
+person: mother e .person.wife 
+
+-- will find any person who married on his mother. It takes only objects from left side of "e" symbol, which belongs to object set from the right side of "e" sumbol.
+
+We need to note that .person in this case will have not all persons for each person, who mother we need to check. If we want to take persons undepently from first person selection, we should use figure brackets {} and optionally number inside it. If no numbers provided means that this set of objects will be undependent from any others with same name. Same numbers means same sets. No figure brackets equels to number 0: {0}
