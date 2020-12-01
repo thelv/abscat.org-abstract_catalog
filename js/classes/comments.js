@@ -38,7 +38,7 @@ comments_=
 		
 		$.ajax(
 		{
-			url: 'http://195.201.88.63:8000/',//'https://abscat.org/comments_server/',
+			url: /*'http://195.201.88.63:8000/',//*/'https://abscat.org/comments/',
 			dataType: 'text',
 			data: 
 			{
@@ -93,7 +93,7 @@ comments_=
 	{
 		$.ajax(
 		{
-			url: 'http://195.201.88.63:8000/',//'https://abscat.org/comments_server/',
+			url: /*'https://195.201.88.63:8000/',//*/'https://abscat.org/comments/',
 			dataType: 'json',
 			data: 
 			{

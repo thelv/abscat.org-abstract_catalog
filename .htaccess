@@ -1,5 +1,14 @@
 RewriteEngine On
 #RewriteRule ^(ru\/[^\.]*)$ /ru/index.php [L]
 RewriteRule ^([^\.]*)$ index_compile.php [L]
+RewriteCond %{HTTP:X-Real-IP} 195\.201\.88\.63
+RewriteRule ^js/main\.js.*$ js/main_ssr.php [L]
 RewriteRule ^js/main\.js.*$ js/main.php [L]
+#RewriteCond %{HTTP:X-Real-IP} 78\.107\.251\.133
+RewriteCond %{HTTP:X-Real-IP} 195\.201\.88\.63
+RewriteRule ^css/main\.css.*$ css/main_ssr.css [L]
+#RewriteCond %{HTTP:X-Real-IP} 195\.201\.88\.63
+#RewriteRule ^.*\.jpg$ error.jpg [L]
+#RewriteCond %{HTTP:X-Real-IP} 195\.201\.88\.63
+#RewriteRule ^.*\.png(\?.*|)$ error.png [L]
 #RewriteRule ^js/classes/.*\.js.*$ index_compile.php [L]

@@ -95,6 +95,12 @@ var pages=
 			
 			$('#page_catalog .body_menu ._object_new').click(function()
 			{
+				if(user.id!=catId)
+				{
+					alert('You can edit only your own catalog!');
+					return;
+				}
+				
 				Object_.actions.create(null, catId, data, function(objectId)
 				{									
 					//pages.catObj.go(catId, objectId);
@@ -137,7 +143,8 @@ var pages=
 				help.show(data, catId);
 				$('#page_catalog').removeClass('_object_filter_hided');
 				filter();
-				help.show(data, catId);				
+				help.show(data, catId);		
+				if(window.aa) aa();
 			});			
 			
 			$('#page_catalog .body_menu ._backup').attr('href', '/ajax.php?type=cat&cat_id='+catId).attr('download', 'abscat.org - catalog #'+catId+' - backup.txt');

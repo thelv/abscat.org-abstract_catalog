@@ -1,5 +1,4 @@
 ﻿<?php
-
 	//ini_set('display_errors', 1);	
 
 	include 'lib/auth.php';
@@ -77,7 +76,7 @@
 				</div>
 				<div class="body_body">
 					$@{You can create} <a class="_my_cat_link _link">$@{your own catalog}</a> $@{or discover other people} <a class="_cats_link _link">$@{catalogs}</a>.
-					<br><br>
+					<P style='margin-top:7px'>
 					Github page: <a target=_blank class=_link href=https://github.com/thelv/abscat.org-abstract_catalog>https://github.com/thelv/abscat.org-abstract_catalog</a>.
 				</div>				
 			</div>
@@ -194,7 +193,7 @@
 				</div>				
 				<div class="body_menu">
 					<a class='_back _back_back'>← $@{back}</a><!--
-					--><a class=''>documentation</a>
+					--><a class='' target=_blank href='https://github.com/thelv/abscat.org-abstract_catalog/blob/master/README.md'>documentation</a>
 				</div>
 				</div>
 				<div class="body_body">					
@@ -556,7 +555,8 @@
 									<div class=_body>
 										<input name=connection_text type=text placeholder="mother">									
 									</div>
-
+								</div>
+								<div class="_element">
 
 									<div class=_head>
 										$@{Text for the opposite direction}:

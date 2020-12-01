@@ -32,7 +32,12 @@ console.log('start');
 			');
 			typeNode.find('.table_type_head a').text(type.type || '_');
 			typeNode.find('._menu_icon').click((function(type){return function()
-			{						
+			{			
+				if(user.id!=catId)
+				{
+					return;
+				}					
+			
 				menu.openOrClose
 				(
 					$(this).parent()
@@ -115,6 +120,11 @@ console.log('start');
 						.
 							click(function()
 							{
+								if(user.id!=catId)
+								{
+									return;
+								}
+								
 								menu.openOrClose
 								(
 									$(this).parent()
