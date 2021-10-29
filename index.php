@@ -3,7 +3,7 @@
 
 	include 'lib/auth.php';
 	
-	$cache=false;
+	$cache=true;
 ?>
 <html>
 	<head>
@@ -11,7 +11,7 @@
 		<meta name=viewport content='width=700px'>
 		<link rel="icon" href="/img/abscat8.png" type="image/x-png" />
 		<title>Abstract Catalog</title>				
-		<link rel="stylesheet" type="text/css" href="/css/main.css?3<?php echo ! $cache ? rand(1,1000000) : ''; ?>" />
+		<link rel="stylesheet" type="text/css" href="/css/main.css?4<?php echo ! $cache ? rand(1,1000000) : ''; ?>" />
 		<style id="css_head"></style>
 	</head>
 	<body><div>	
@@ -854,7 +854,7 @@
 		<script>		
 			var user=<?php echo $user ? json_encode($user) : '{id: 0}'; ?>;		
 		</script>
-		<script src='/js/main.js?3<?php echo ! $cache ? rand(1,1000000) : ''; echo '&lang='.$lang ?>'>
+		<script src='/js/main.js?4<?php echo ! $cache ? rand(1,1000000) : ''; echo '&lang='.$lang ?>'>
 		</script>
 			
 		<?php

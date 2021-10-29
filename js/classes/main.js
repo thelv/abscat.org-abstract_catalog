@@ -512,7 +512,7 @@ SqlEditor=function(node)
 				if(n=='==') return '<span class="_bracket">≡</span>';
 				if(n=='*') return '<span class="_bracket">*</span>';
 				if(n.match(/--[^\s]+/)) return '<span style="color:#336a33">'+n+'</span>';//6a6
-				if(n=='u') return '<span class="_bracket">⋃</span>';				
+				if(n=='u' || n=='U') return '<span class="_bracket">⋃</span>';				
 				if(n.match(/\se\s/)) return '<span class="_bracket"> ∈ </span>';				
 				if(n.match(/\s\!e\s/)) return '<span class="_bracket"> ∉ </span>';				
 				if(n.match(/\s\-\s/)) return '<span class="_bracket"> - </span>';				

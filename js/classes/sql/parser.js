@@ -238,6 +238,7 @@ var sqlRequest=(function()
 		{
 			match.word('as', {not: 1, necessary: 1});
 			match.word('u', {not: 1, necessary: 1});
+			match.word('U', {not: 1, necessary: 1});
 			
 			match.str('!') && return_({type: '!', a: match.select({inner: 1}, {critical: 1})});
 			if(match.bracketSelect())
